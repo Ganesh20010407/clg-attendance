@@ -81,10 +81,57 @@
   </section>
 
   <!-- ATTENDANCE (placeholder) -->
-  <section id="attendance" class="section hidden">
-    <h3>Attendance</h3>
-    <p>Attendance records will be here</p>
-  </section>
+  <!-- ATTENDANCE -->
+<section id="attendance" class="section hidden">
+
+  <h3>Attendance Records</h3>
+
+  <!-- TOP CONTROLS -->
+  <div style="margin-bottom:10px;">
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Search (name / roll / dept / incharge / hod)"
+      onkeyup="applySearch()"
+    >
+
+    <select id="sortSelect" onchange="applySort()">
+      <option value="dateDesc">Date (Latest)</option>
+      <option value="dateAsc">Date (Oldest)</option>
+      <option value="name">Name (A-Z)</option>
+      <option value="roll">Roll</option>
+    </select>
+
+    <select id="sessionFilter" onchange="applyFilter()">
+      <option value="All">All</option>
+      <option value="FN">FN</option>
+      <option value="AN">AN</option>
+    </select>
+
+    <button onclick="downloadExcel()">Download Excel</button>
+  </div>
+
+  <!-- TABLE -->
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Name</th>
+        <th>Roll</th>
+        <th>Dept</th>
+        <th>Incharge</th>
+        <th>HOD</th>
+        <th>Session</th>
+        <th>Status</th>
+        <th>Time</th>
+        <th>Location</th>
+      </tr>
+    </thead>
+    <tbody id="attendanceTable"></tbody>
+  </table>
+
+</section>
+
 
   <!-- SETTINGS (placeholder) -->
   <section id="settings" class="section hidden">

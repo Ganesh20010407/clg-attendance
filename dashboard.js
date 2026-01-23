@@ -147,3 +147,105 @@ async function loadApprovalPermissions() {
 window.togglePermission = async (uid, val) => {
   await updateDoc(doc(db, "users", uid), { canApproveStudents: val });
 };
+
+
+import {
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+/* ================= ATTENDANCE ================= */
+
+let attendanceData = [];
+let filteredData = [];
+
+/* LOAD RECORDS */
+async function loadAttendance() {
+  const snap = await getDocs(collection(db, "attendanceRecords"));
+  attendanceData = [];
+  snap.forEach(d => attendanceData.push(d.data()));
+  filteredData = [...attendanceData];
+  renderAttendance(filteredData);
+}
+
+/* RENDER TABLE */
+function renderAttendance(data) {
+  const table = document.getElementById("attendanceTable");
+  table.innerHTML = "";
+
+  data.forEach(r => {
+    table.innerHTML += `
+      <tr>
+        <td>${r.date}</td>
+        <td>${r.studentName}</td>
+        <td>${r.roll}</td>
+        <td>${r.department}</td>
+        <td>${r.inchargeName}</td>
+        <td>${r.hodName}</td>
+        <td>${r.session}</td>
+        <td>${r.status}</td>
+        <td>${r.markedTime || "-"}</td>
+        <td>${r.locationStatus || "-"}</td>
+      </tr>
+    `;
+  });
+}
+
+/* SEARCH */
+window.applySearch = function () {
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  filteredData = attendanceData.filter(r =>
+    r.studentName.toLowerCase().includes(q) ||
+    r.roll.toLowerCase().includes(q) ||
+    r.department.toLowerCase().includes(q) ||
+    r.inchargeName.toLowerCase().includes(q) ||
+    r.hodName.toLowerCase().includes(q)
+  );
+  applyFilter();
+};
+
+/* SESSION FILTER */
+window.applyFilter = function () {
+  const s = document.getElementById("sessionFilter").value;
+  let temp = [...filteredData];
+  if (s !== "All") temp = temp.filter(r => r.session === s);
+  renderAttendance(temp);
+};
+
+/* SORT */
+window.applySort = function () {
+  const type = document.getElementById("sortSelect").value;
+  let temp = [...filteredData];
+
+  if (type === "dateDesc")
+    temp.sort((a, b) => b.date.localeCompare(a.date));
+  if (type === "dateAsc")
+    temp.sort((a, b) => a.date.localeCompare(b.date));
+  if (type === "name")
+    temp.sort((a, b) => a.studentName.localeCompare(b.studentName));
+  if (type === "roll")
+    temp.sort((a, b) => a.roll.localeCompare(b.roll));
+
+  renderAttendance(temp);
+};
+
+/* DOWNLOAD EXCEL */
+window.downloadExcel = function () {
+  let csv = "Date,Name,Roll,Dept,Incharge,HOD,Session,Status,Time,Location\n";
+  filteredData.forEach(r => {
+    csv += `${r.date},${r.studentName},${r.roll},${r.department},${r.inchargeName},${r.hodName},${r.session},${r.status},${r.markedTime || ""},${r.locationStatus || ""}\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "attendance.csv";
+  a.click();
+};
+
+/* LOAD WHEN ATTENDANCE MENU CLICKED */
+const oldShow = window.showSection;
+window.showSection = function (id) {
+  oldShow(id);
+  if (id === "attendance") loadAttendance();
+};
