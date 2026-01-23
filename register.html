@@ -9,7 +9,7 @@
 <div class="container">
   <h2>Register</h2>
 
-  <!-- ROLE DISPLAY (VERY IMPORTANT) -->
+  <!-- ROLE DISPLAY -->
   <div style="
     text-align:center;
     margin-bottom:15px;
@@ -22,11 +22,17 @@
     <span id="roleLabel" style="text-transform:uppercase;"></span>
   </div>
 
+  <!-- COMMON -->
   <input id="name" placeholder="Full Name">
   <input id="email" type="email" placeholder="Email">
   <input id="password" type="password" placeholder="Password">
 
-  <!-- STUDENT FIELDS -->
+  <!-- PHONE (EVERYONE EXCEPT ADMIN & PRINCIPAL) -->
+  <div id="phoneBox">
+    <input id="phone" placeholder="Phone Number">
+  </div>
+
+  <!-- STUDENT -->
   <div id="studentFields">
     <input id="roll" placeholder="Roll Number">
     <select id="inchargeSelect">
@@ -37,28 +43,15 @@
     </select>
   </div>
 
-  <!-- STAFF FIELDS -->
-  <div id="staffFields" style="display:none">
-    <input id="phone" placeholder="Phone Number">
+  <!-- INCHARGE -->
+  <div id="inchargeFields">
+    <select id="hodForIncharge">
+      <option value="">Select Supervising HOD</option>
+    </select>
   </div>
-
-  <!-- STAFF MESSAGE -->
-  <p id="staffNote" style="
-    display:none;
-    text-align:center;
-    font-size:13px;
-    color:#555;
-    margin-top:8px;
-  ">
-    This account requires admin approval after registration.
-  </p>
 
   <button id="registerBtn">Register</button>
   <p id="status"></p>
-
-  <p style="text-align:center;margin-top:10px;">
-    Already registered? <a href="login.html">Login</a>
-  </p>
 </div>
 
 <div id="loading">Creating account...</div>
