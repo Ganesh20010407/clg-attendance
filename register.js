@@ -1,62 +1,125 @@
 import { auth, db } from "./firebase.js";
-import { createUserWithEmailAndPassword } from
-"https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import { collection, getDocs, setDoc, doc } from
-"https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import {
+  createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {
+  collection,
+  getDocs,
+  setDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-const safe=v=>v&&v.trim()?v.trim():"";
+/* ================= ROLE FROM INDEX ================= */
+const role = localStorage.getItem("loginRole");
 
-role.onchange=()=>{
-  studentFields.style.display=role.value==="student"?"block":"none";
-  staffFields.style.display=role.value==="student"?"none":"block";
-};
+if (!role) {
+  alert("Please select role first");
+  location.href = "index.html";
+}
 
-async function loadStaff(){
-  const snap=await getDocs(collection(db,"users"));
-  snap.forEach(d=>{
-    const u=d.data();
-    if(u.approved && u.role==="incharge")
-      inchargeSelect.innerHTML+=`<option value="${d.id}">${u.name}</option>`;
-    if(u.approved && u.role==="hod")
-      hodSelect.innerHTML+=`<option value="${d.id}">${u.name}</option>`;
+roleLabel.innerText = role.toUpperCase();
+
+/* ================= FIELD TOGGLE ================= */
+if (role === "student") {
+  studentFields.style.display = "block";
+  staffFields.style.display = "none";
+} else {
+  studentFields.style.display = "none";
+  staffFields.style.display = "block";
+}
+
+/* ================= LOAD STAFF ================= */
+async function loadStaff() {
+  const snap = await getDocs(collection(db, "users"));
+  snap.forEach(d => {
+    const u = d.data();
+    if (u.role === "incharge" && u.approved) {
+      inchargeSelect.innerHTML += `<option value="${d.id}">${u.name}</option>`;
+    }
+    if (u.role === "hod" && u.approved) {
+      hodSelect.innerHTML += `<option value="${d.id}">${u.name}</option>`;
+    }
   });
 }
-loadStaff();
+if (role === "student") loadStaff();
 
-registerBtn.onclick=async()=>{
-  if(!navigator.onLine){ status.innerText="No internet"; return; }
-  showLoading("Creating account...");
-  try{
-    const cred=await createUserWithEmailAndPassword(auth,email.value,password.value);
-    const base={
-      uid:cred.user.uid,
-      name:safe(name.value),
-      email:safe(email.value),
-      role:role.value,
-      createdAt:new Date()
+/* ================= HELPERS ================= */
+function showError(msg) {
+  status.innerText = msg;
+  status.style.color = "red";
+}
+
+function showLoading(msg = "Creating account...") {
+  loading.innerText = msg;
+  loading.style.display = "block";
+}
+
+function hideLoading() {
+  loading.style.display = "none";
+}
+
+/* ================= REGISTER ================= */
+registerBtn.onclick = async () => {
+  status.innerText = "";
+
+  const nameVal = name.value.trim();
+  const emailVal = email.value.trim();
+  const passVal = password.value;
+
+  if (!nameVal || !emailVal || !passVal) {
+    showError("All fields are required");
+    return;
+  }
+
+  showLoading();
+  registerBtn.disabled = true;
+
+  try {
+    const cred = await createUserWithEmailAndPassword(
+      auth,
+      emailVal,
+      passVal
+    );
+
+    const base = {
+      uid: cred.user.uid,
+      name: nameVal,
+      email: emailVal,
+      role,
+      createdAt: new Date()
     };
-    if(role.value==="student"){
-      if(!inchargeSelect.value||!hodSelect.value){
-        status.innerText="Select Incharge & HOD"; hideLoading(); return;
+
+    if (role === "student") {
+      if (!roll.value || !inchargeSelect.value || !hodSelect.value) {
+        throw { message: "Fill all student fields" };
       }
-      await setDoc(doc(db,"users",cred.user.uid),{
+
+      await setDoc(doc(db, "users", cred.user.uid), {
         ...base,
-        roll:safe(roll.value),
-        inchargeId:inchargeSelect.value,
-        hodId:hodSelect.value,
-        approved:true
+        roll: roll.value.trim(),
+        inchargeId: inchargeSelect.value,
+        hodId: hodSelect.value,
+        approved: true
       });
-    }else{
-      await setDoc(doc(db,"users",cred.user.uid),{
+
+    } else {
+      if (!phone.value.trim()) {
+        throw { message: "Phone number required" };
+      }
+
+      await setDoc(doc(db, "users", cred.user.uid), {
         ...base,
-        phone:safe(phone.value),
-        approved:false
+        phone: phone.value.trim(),
+        approved: role === "admin" ? true : false
       });
     }
-    alert("Registered successfully");
-    location.href="login.html";
-  }catch(e){
-    status.innerText=e.message;
+
+    alert("Registration successful");
+    location.href = "login.html";
+
+  } catch (e) {
+    showError(e.message || "Registration failed");
+    registerBtn.disabled = false;
+    hideLoading();
   }
-  hideLoading();
 };

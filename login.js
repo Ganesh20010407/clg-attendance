@@ -1,8 +1,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import {
   getAuth,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 /* ================= FIREBASE ================= */
 const app = initializeApp({
@@ -11,6 +17,7 @@ const app = initializeApp({
   projectId: "markattnedance"
 });
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 /* ================= DOM ================= */
 const emailInput = document.getElementById("email");
@@ -18,6 +25,14 @@ const passwordInput = document.getElementById("password");
 const loginBtn = document.getElementById("loginBtn");
 const status = document.getElementById("status");
 const loading = document.getElementById("loading");
+
+/* ================= ROLE FROM INDEX ================= */
+const selectedRole = localStorage.getItem("loginRole");
+
+if (!selectedRole) {
+  alert("Please select who is logging in");
+  window.location.href = "index.html";
+}
 
 /* ================= HELPERS ================= */
 function showError(msg) {
@@ -50,7 +65,30 @@ loginBtn.addEventListener("click", async () => {
   showLoading();
 
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    // 🔐 Firebase Auth
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+
+    // 🔍 Fetch user data
+    const userSnap = await getDoc(doc(db, "users", cred.user.uid));
+    if (!userSnap.exists()) {
+      await signOut(auth);
+      throw { message: "User record not found" };
+    }
+
+    const u = userSnap.data();
+
+    // ❌ ROLE MISMATCH
+    if (u.role !== selectedRole) {
+      await signOut(auth);
+      throw { message: `You selected ${selectedRole}, but your role is ${u.role}` };
+    }
+
+    // ⏳ APPROVAL CHECK
+    if (u.role !== "student" && !u.approved) {
+      await signOut(auth);
+      throw { message: "Waiting for admin approval" };
+    }
+
     // ✅ SUCCESS
     window.location.href = "dashboard.html";
 
@@ -58,30 +96,26 @@ loginBtn.addEventListener("click", async () => {
     hideLoading();
     loginBtn.disabled = false;
 
-    // 🔥 CLEAR, FAST ERROR MESSAGES
-    switch (err.code) {
-      case "auth/user-not-found":
-        showError("User not found. Please register.");
-        break;
-
-      case "auth/wrong-password":
-        showError("Wrong password.");
-        break;
-
-      case "auth/invalid-email":
-        showError("Invalid email format.");
-        break;
-
-      case "auth/network-request-failed":
-        showError("Network error. Check internet.");
-        break;
-
-      case "auth/too-many-quests":
-        showError("Too many attempts. Try later.");
-        break;
-
-      default:
-        showError("Login failed. " + err.message);
+    // 🔥 CLEAN ERROR HANDLING
+    if (err.code) {
+      switch (err.code) {
+        case "auth/user-not-found":
+          showError("User not found. Please register.");
+          break;
+        case "auth/wrong-password":
+          showError("Wrong password.");
+          break;
+        case "auth/invalid-email":
+          showError("Invalid email format.");
+          break;
+        case "auth/network-request-failed":
+          showError("Network error. Check internet.");
+          break;
+        default:
+          showError(err.message);
+      }
+    } else {
+      showError(err.message || "Login failed");
     }
   }
 });

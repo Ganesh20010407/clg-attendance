@@ -9,47 +9,41 @@
 <div class="container">
   <h2>Register</h2>
 
-  <select id="role">
-    <option value="student">Student</option>
-    <option value="incharge">Incharge</option>
-    <option value="hod">HOD</option>
-  </select>
+  <p style="text-align:center;margin-bottom:10px;">
+    Registering as: <b><span id="roleLabel"></span></b>
+  </p>
 
   <input id="name" placeholder="Full Name">
   <input id="email" type="email" placeholder="Email">
   <input id="password" type="password" placeholder="Password">
 
+  <!-- STUDENT FIELDS -->
   <div id="studentFields">
     <input id="roll" placeholder="Roll Number">
-    <select id="inchargeSelect"><option value="">Select Incharge</option></select>
-    <select id="hodSelect"><option value="">Select HOD</option></select>
+    <select id="inchargeSelect">
+      <option value="">Select Incharge</option>
+    </select>
+    <select id="hodSelect">
+      <option value="">Select HOD</option>
+    </select>
   </div>
 
+  <!-- STAFF FIELDS -->
   <div id="staffFields" style="display:none">
     <input id="phone" placeholder="Phone Number">
-    <small>* Admin approval required</small>
+    <small>* Requires admin approval</small>
   </div>
 
   <button id="registerBtn">Register</button>
   <p id="status"></p>
+
+  <p style="text-align:center;margin-top:10px;">
+    Already registered? <a href="login.html">Login</a>
+  </p>
 </div>
 
 <div id="loading">Creating account...</div>
-<div id="networkStatus"></div>
 
 <script type="module" src="register.js"></script>
-<script>
-  const net=document.getElementById("networkStatus");
-  function netUpdate(){
-    net.textContent=navigator.onLine?"Online":"Offline";
-    net.className=navigator.onLine?"online":"offline";
-    net.style.display="block";
-  }
-  addEventListener("online",netUpdate);
-  addEventListener("offline",netUpdate);
-  netUpdate();
-  function showLoading(msg){loading.textContent=msg;loading.style.display="block"}
-  function hideLoading(){loading.style.display="none"}
-</script>
 </body>
 </html>
