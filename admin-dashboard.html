@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h2>Admin Dashboard</h2>
+  <button id="logoutBtn">Logout</button>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <button onclick="showSection('overview')">Overview</button>
+    <button onclick="showSection('staffApprovals')">Staff Approvals</button>
+    <button onclick="showSection('studentApprovals')">Student Approvals</button>
+    <button onclick="showSection('approvalPermissions')">Approval Permissions</button>
+    <button onclick="showSection('attendance')">Attendance</button>
+    <button onclick="showSection('settings')">Settings</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <div id="overview" class="section">
+      <h3>Overview</h3>
+      <p>Total Students: <span id="totalStudents">0</span></p>
+      <p>Total Staff: <span id="totalStaff">0</span></p>
+      <p>Pending Students: <span id="pendingStudents">0</span></p>
+      <p>Pending Staff: <span id="pendingStaff">0</span></p>
+    </div>
+
+    <!-- STAFF APPROVALS -->
+    <div id="staffApprovals" class="section hidden">
+      <h3>Staff Registration Approvals</h3>
+      <table id="staffTable">
+        <tr>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Email</th>
+          <th>Action</th>
+        </tr>
+      </table>
+    </div>
+
+    <!-- STUDENT APPROVALS -->
+    <div id="studentApprovals" class="section hidden">
+      <h3>Student Registration Approvals</h3>
+      <table id="studentTable">
+        <tr>
+          <th>Name</th>
+          <th>Roll</th>
+          <th>Action</th>
+        </tr>
+      </table>
+    </div>
+
+    <!-- APPROVAL PERMISSIONS -->
+    <div id="approvalPermissions" class="section hidden">
+      <h3>Approval Permissions</h3>
+      <table id="permissionTable">
+        <tr>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Can Approve Students</th>
+        </tr>
+      </table>
+    </div>
+
+    <!-- ATTENDANCE -->
+    <div id="attendance" class="section hidden">
+      <h3>Attendance</h3>
+      <button id="downloadExcel">Download Attendance (Excel)</button>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settings" class="section hidden">
+      <h3>Settings</h3>
+      <label>FN Start Time</label>
+      <input type="time" id="fnStart">
+
+      <label>FN End Time</label>
+      <input type="time" id="fnEnd">
+
+      <label>AN Start Time</label>
+      <input type="time" id="anStart">
+
+      <label>AN End Time</label>
+      <input type="time" id="anEnd">
+
+      <button id="saveSettings">Save Settings</button>
+    </div>
+
+  </div>
+</div>
+
+<script type="module" src="admin-dashboard.js"></script>
+</body>
+</html>
