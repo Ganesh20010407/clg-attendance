@@ -31,6 +31,12 @@ const views = document.querySelectorAll(".view");
 
 menuToggle.onclick = () => menu.classList.toggle("show");
 
+document.addEventListener("click", e => {
+  if (!menu.contains(e.target) && !menuToggle.contains(e.target)) {
+    menu.classList.remove("show");
+  }
+});
+
 function showView(id) {
   views.forEach(v => (v.style.display = "none"));
   document.getElementById(id).style.display = "block";
@@ -57,7 +63,7 @@ onAuthStateChanged(auth, async user => {
 
   const userSnap = await getDoc(doc(db, "users", user.uid));
   if (!userSnap.exists()) {
-    alert("User data not found");
+    alert("User record missing");
     await signOut(auth);
     return (location.href = "login.html");
   }
@@ -92,9 +98,9 @@ onAuthStateChanged(auth, async user => {
   const sSnap = await getDoc(doc(db, "settings", "attendance"));
   if (sSnap.exists()) settings = sSnap.data();
 
-  // role routing
-  if (u.role === "student") loadStudent(user, u);
-  if (u.role === "incharge") loadIncharge(user);
+  // route by role
+  if (u.role === "student") loadStudent(u);
+  if (u.role === "incharge") loadIncharge(user.uid);
   if (u.role === "hod") loadHod();
   if (u.role === "admin") loadAdmin();
 });
@@ -110,10 +116,10 @@ function allowedSession() {
 /* ================= GPS ================= */
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3;
-  const φ1 = (lat1 * Math.PI) / 180;
-  const φ2 = (lat2 * Math.PI) / 180;
-  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
   const a =
     Math.sin(Δφ / 2) ** 2 +
     Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
@@ -125,8 +131,7 @@ function checkGPSBest() {
     navigator.geolocation.getCurrentPosition(
       pos => {
         const { latitude, longitude, accuracy } = pos.coords;
-        if (accuracy > settings.maxAccuracy)
-          return reject("accuracy");
+        if (accuracy > settings.maxAccuracy) return reject("accuracy");
 
         const dist = getDistance(
           latitude,
@@ -150,14 +155,12 @@ function checkGPSBest() {
 }
 
 /* ================= STUDENT ================= */
-async function loadStudent(user, u) {
+async function loadStudent(u) {
   menu.innerHTML = `
     <a onclick="showView('profileView')">Profile</a>
     <a onclick="showView('studentAttendanceView')">Attendance</a>
     <a onclick="logout()">Logout</a>`;
   showView("studentAttendanceView");
-
-  markAttendanceBtn.disabled = false;
 
   markAttendanceBtn.onclick = async () => {
     if (settings.locked) return alert("Attendance locked");
@@ -167,25 +170,21 @@ async function loadStudent(user, u) {
 
     try {
       const gps = await checkGPSBest();
-      if (!gps.inside) return alert("You are outside college");
+      if (!gps.inside) return alert("Outside college");
 
       const today = new Date().toLocaleDateString();
 
-      // prevent duplicates
       const snap = await getDocs(collection(db, "attendance"));
-      let already = false;
+      let exists = false;
 
       snap.forEach(d => {
         const a = d.data();
-        if (
-          a.email === u.email &&
-          a.date === today &&
-          a.session === session
-        ) already = true;
+        if (a.email === u.email && a.date === today && a.session === session) {
+          exists = true;
+        }
       });
 
-      if (already)
-        return alert("Attendance already marked for this session");
+      if (exists) return alert("Attendance already marked");
 
       await addDoc(collection(db, "attendance"), {
         name: u.name,
@@ -205,20 +204,19 @@ async function loadStudent(user, u) {
         timestamp: new Date()
       });
 
-      alert("Attendance marked successfully");
+      alert("Attendance marked");
       location.reload();
 
     } catch (e) {
-      if (e === "accuracy") alert("Low GPS accuracy. Go outside.");
+      if (e === "accuracy") alert("Low GPS accuracy");
       else if (e === "permission") alert("Enable GPS permission");
-      else alert("Unable to mark attendance");
+      else alert("Attendance failed");
     }
   };
 
-  // load attendance table
   const snap = await getDocs(collection(db, "attendance"));
-  studentAttendanceTable.innerHTML = "";
   let total = 0, present = 0;
+  studentAttendanceTable.innerHTML = "";
 
   snap.forEach(d => {
     const a = d.data();
@@ -237,13 +235,11 @@ async function loadStudent(user, u) {
     }
   });
 
-  stuPercent.innerText = total
-    ? Math.round((present / total) * 100) + "%"
-    : "0%";
+  stuPercent.innerText = total ? Math.round(present / total * 100) + "%" : "0%";
 }
 
 /* ================= INCHARGE ================= */
-async function loadIncharge(user) {
+async function loadIncharge(uid) {
   menu.innerHTML = `
     <a onclick="showView('profileView')">Profile</a>
     <a onclick="showView('inchargeStudentsView')">Students</a>
@@ -255,7 +251,7 @@ async function loadIncharge(user) {
 
   users.forEach(d => {
     const s = d.data();
-    if (s.role === "student" && s.inchargeId === user.uid) {
+    if (s.role === "student" && s.inchargeId === uid) {
       inchargeStudentTable.innerHTML += `
         <tr>
           <td>${s.name}</td>
