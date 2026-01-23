@@ -2,122 +2,148 @@ import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import {
+  collection,
+  getDocs,
+  updateDoc,
+  deleteDoc,
   doc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-/* ================= DOM ================= */
-const dashboardTitle = document.getElementById("dashboardTitle");
-const logoutBtn = document.getElementById("logoutBtn");
+/* MENU TOGGLE */
+window.toggleMenu = function () {
+  const s = document.getElementById("sidebar");
+  s.style.display = s.style.display === "block" ? "none" : "block";
+};
 
-/* ================= SECTION CONTROL ================= */
+/* SECTION SWITCH */
 window.showSection = function (id) {
   document.querySelectorAll(".section")
     .forEach(sec => sec.classList.add("hidden"));
-
   document.getElementById(id).classList.remove("hidden");
+  document.getElementById("sidebar").style.display = "none";
 };
 
-/* ================= AUTH CHECK ================= */
+/* LOGOUT */
+window.logout = function () {
+  signOut(auth);
+  location.href = "login.html";
+};
+
+/* AUTH CHECK */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     location.href = "login.html";
     return;
   }
 
-  // get logged-in user data
-  const userRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userRef);
-
-  if (!snap.exists()) {
-    alert("User data not found");
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (!snap.exists() || snap.data().role !== "admin") {
     location.href = "login.html";
     return;
   }
 
-  const u = snap.data();
-
-  // block unapproved users
-  if (u.approved === false) {
-    alert("Account not approved yet");
-    signOut(auth);
-    location.href = "login.html";
-    return;
-  }
-
-  setupDashboard(u);
+  document.getElementById("pName").innerText = snap.data().name;
+  document.getElementById("pEmail").innerText = snap.data().email;
 });
 
-/* ================= DASHBOARD SETUP ================= */
-function setupDashboard(user) {
+/* ================= APPROVALS ================= */
 
-  dashboardTitle.innerText =
-    user.role.toUpperCase() + " DASHBOARD";
+window.openApprovals = function () {
+  showSection("approvals");
+  loadPendingStaff();
+  loadPendingStudents();
+  loadApprovalPermissions();
+};
 
-  // fill profile
-  document.getElementById("pName").innerText = user.name || "-";
-  document.getElementById("pRole").innerText = user.role;
-  document.getElementById("pPhone").innerText = user.phone || "-";
+/* STAFF APPROVAL */
+async function loadPendingStaff() {
+  const table = document.getElementById("staffTable");
+  table.innerHTML = "";
 
-  // hide all menu buttons first
-  document.querySelectorAll(".sidebar button")
-    .forEach(btn => btn.style.display = "none");
-
-  // show common buttons
-  showMenuByRole("all");
-
-  // STUDENT
-  if (user.role === "student") {
-    showMenuByRole("student");
-    showSection("overview");
-  }
-
-  // INCHARGE
-  if (user.role === "incharge") {
-    showMenuByRole("staff");
-
-    if (user.canApproveStudents === true) {
-      showMenuByRole("approver");
+  const snap = await getDocs(collection(db, "users"));
+  snap.forEach(d => {
+    const u = d.data();
+    if (
+      u.approved === false &&
+      (u.role === "incharge" || u.role === "hod" || u.role === "principal")
+    ) {
+      table.innerHTML += `
+        <tr>
+          <td>${u.name}</td>
+          <td>${u.role}</td>
+          <td>${u.email}</td>
+          <td>
+            <button onclick="approveStaff('${d.id}')">Approve</button>
+            <button onclick="rejectStaff('${d.id}')">Reject</button>
+          </td>
+        </tr>
+      `;
     }
-
-    showSection("overview");
-  }
-
-  // HOD
-  if (user.role === "hod") {
-    showMenuByRole("staff");
-
-    if (user.canApproveStudents === true) {
-      showMenuByRole("approver");
-    }
-
-    showSection("overview");
-  }
-
-  // PRINCIPAL
-  if (user.role === "principal") {
-    showMenuByRole("staff");
-    showSection("overview");
-  }
-
-  // ADMIN
-  if (user.role === "admin") {
-    showMenuByRole("admin");
-    showMenuByRole("staff");
-    showMenuByRole("approver");
-    showSection("overview");
-  }
+  });
 }
 
-/* ================= MENU VISIBILITY ================= */
-function showMenuByRole(roleTag) {
-  document.querySelectorAll(
-    `.sidebar button[data-role="${roleTag}"]`
-  ).forEach(btn => btn.style.display = "block");
+window.approveStaff = async (uid) => {
+  await updateDoc(doc(db, "users", uid), { approved: true });
+  loadPendingStaff();
+};
+
+window.rejectStaff = async (uid) => {
+  await deleteDoc(doc(db, "users", uid));
+  loadPendingStaff();
+};
+
+/* STUDENT APPROVAL */
+async function loadPendingStudents() {
+  const table = document.getElementById("studentTable");
+  table.innerHTML = "";
+
+  const snap = await getDocs(collection(db, "users"));
+  snap.forEach(d => {
+    const u = d.data();
+    if (u.role === "student" && u.approved === false) {
+      table.innerHTML += `
+        <tr>
+          <td>${u.name}</td>
+          <td>${u.roll || "-"}</td>
+          <td>
+            <button onclick="approveStudent('${d.id}')">Approve</button>
+          </td>
+        </tr>
+      `;
+    }
+  });
 }
 
-/* ================= LOGOUT ================= */
-logoutBtn.onclick = () => {
-  signOut(auth);
-  location.href = "login.html";
+window.approveStudent = async (uid) => {
+  await updateDoc(doc(db, "users", uid), { approved: true });
+  loadPendingStudents();
+};
+
+/* APPROVAL PERMISSIONS */
+async function loadApprovalPermissions() {
+  const table = document.getElementById("permissionTable");
+  table.innerHTML = "";
+
+  const snap = await getDocs(collection(db, "users"));
+  snap.forEach(d => {
+    const u = d.data();
+    if (u.role === "hod" || u.role === "incharge") {
+      table.innerHTML += `
+        <tr>
+          <td>${u.name}</td>
+          <td>${u.role}</td>
+          <td>
+            <input type="checkbox"
+              ${u.canApproveStudents ? "checked" : ""}
+              onchange="togglePermission('${d.id}', this.checked)">
+          </td>
+        </tr>
+      `;
+    }
+  });
+}
+
+window.togglePermission = async (uid, val) => {
+  await updateDoc(doc(db, "users", uid), { canApproveStudents: val });
 };

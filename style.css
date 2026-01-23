@@ -1,120 +1,78 @@
 /* ================= admin ================= */
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
 }
 
 /* HEADER */
-.topbar {
-  height: 60px;
-  background: #1f2937;
+.header {
+  height: 55px;
+  background: #222;
   color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-}
-
-.logo {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.user-info {
   display: flex;
   align-items: center;
   gap: 15px;
+  padding: 0 15px;
 }
 
-.user-info button {
-  background: #ef4444;
+.menu-btn {
+  background: none;
   border: none;
   color: white;
-  padding: 6px 12px;
+  font-size: 22px;
   cursor: pointer;
-  border-radius: 4px;
-}
-
-/* LAYOUT */
-.layout {
-  display: flex;
-  height: calc(100vh - 60px);
 }
 
 /* SIDEBAR */
 .sidebar {
-  width: 240px;
-  background: #111827;
-  padding: 15px;
-  color: #d1d5db;
-}
-
-.menu-btn {
-  width: 100%;
-  margin-bottom: 15px;
-}
-
-.menu-group {
-  margin-bottom: 20px;
-}
-
-.menu-title {
-  font-size: 13px;
-  text-transform: uppercase;
-  cursor: pointer;
-  margin-bottom: 6px;
-  color: #9ca3af;
-}
-
-.submenu {
+  position: fixed;
+  top: 55px;
+  left: 0;
+  width: 220px;
+  height: 100%;
+  background: #333;
   display: none;
-  margin-left: 10px;
 }
 
-.sidebar button {
-  width: 100%;
-  background: none;
-  border: none;
-  color: inherit;
-  padding: 8px;
-  text-align: left;
+.sidebar a {
+  display: block;
+  padding: 12px;
+  color: white;
   cursor: pointer;
-  border-radius: 4px;
+  text-decoration: none;
 }
 
-.sidebar button:hover {
-  background: #1f2937;
+.sidebar a:hover {
+  background: #444;
 }
 
 /* CONTENT */
 .content {
-  flex: 1;
-  padding: 30px;
+  padding: 20px;
 }
 
-/* SECTIONS */
 .section.hidden {
   display: none;
 }
 
-/* PROFILE */
-.profile-card {
-  max-width: 350px;
-  margin: 50px auto;
-  background: white;
-  padding: 30px;
-  text-align: center;
-  border-radius: 10px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
 }
 
-.profile-card img {
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  margin-bottom: 15px;
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+}
+
+button {
+  cursor: pointer;
 }
 
 /* ================= admin close ================= */
