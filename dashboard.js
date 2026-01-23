@@ -1,3 +1,6 @@
+/* =========================================================
+   1. FIREBASE IMPORTS & INIT
+========================================================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import {
@@ -11,16 +14,18 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-/* ================= FIREBASE ================= */
 const app = initializeApp({
   apiKey: "AIzaSyAFUziq6QGKCwujtiTL-4Rk823FE12ZDGU",
   authDomain: "markattnedance.firebaseapp.com",
   projectId: "markattnedance"
 });
+
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ================= DOM ================= */
+/* =========================================================
+   2. DOM + MENU HANDLING
+========================================================= */
 const menu = document.getElementById("menu");
 const menuToggle = document.getElementById("menuToggle");
 const views = document.querySelectorAll(".view");
@@ -34,7 +39,9 @@ function showView(id) {
 }
 window.showView = showView;
 
-/* ================= SETTINGS ================= */
+/* =========================================================
+   3. GLOBAL SETTINGS (ADMIN CONTROLLED)
+========================================================= */
 let settings = {
   collegeLat: 16.5062,
   collegeLng: 80.6480,
@@ -47,23 +54,25 @@ let settings = {
   anEnd: "16:00"
 };
 
-/* ================= AUTH ================= */
+/* =========================================================
+   4. AUTH STATE & ROLE ROUTER
+========================================================= */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     location.href = "login.html";
     return;
   }
 
-  // 🔥 FIX: Use UID (NOT email)
-  const userSnap = await getDoc(doc(db, "users", user.uid));
-  if (!userSnap.exists()) {
-    alert("User profile missing");
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (!snap.exists()) {
+    alert("Profile missing. Please re-register.");
+    await signOut(auth);
     return;
   }
 
-  const u = userSnap.data();
+  const u = snap.data();
 
-  /* PROFILE */
+  /* PROFILE COMMON */
   pName.innerText = u.name || "-";
   pEmail.innerText = u.email || "-";
   pRole.innerText = u.role || "-";
@@ -76,11 +85,13 @@ onAuthStateChanged(auth, async (user) => {
 
   if (u.role === "student") loadStudent(user, u);
   if (u.role === "incharge") loadIncharge(user, u);
-  if (u.role === "hod") loadHod();
-  if (u.role === "admin") loadAdmin();
+  if (u.role === "hod") loadHod(u);
+  if (u.role === "admin") loadAdmin(u);
 });
 
-/* ================= TIME ================= */
+/* =========================================================
+   5. TIME & GPS HELPERS
+========================================================= */
 function allowedSession() {
   const t = new Date().toTimeString().slice(0, 5);
   if (t >= settings.fnStart && t <= settings.fnEnd) return "FN";
@@ -88,7 +99,6 @@ function allowedSession() {
   return null;
 }
 
-/* ================= GPS ================= */
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3;
   const φ1 = lat1 * Math.PI / 180;
@@ -102,7 +112,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function checkGPSBest() {
+function checkGPS() {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(
       pos => {
@@ -111,27 +121,26 @@ function checkGPSBest() {
           return reject("Low GPS accuracy");
 
         const dist = getDistance(
-          latitude,
-          longitude,
-          settings.collegeLat,
-          settings.collegeLng
+          latitude, longitude,
+          settings.collegeLat, settings.collegeLng
         );
 
         resolve({
           inside: dist <= settings.radius,
-          latitude,
-          longitude,
+          latitude, longitude,
           accuracy,
           distance: Math.round(dist)
         });
       },
       () => reject("GPS permission denied"),
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   });
 }
 
-/* ================= STUDENT ================= */
+/* =========================================================
+   6. STUDENT DASHBOARD
+========================================================= */
 async function loadStudent(user, u) {
   menu.innerHTML = `
     <a onclick="showView('profileView')">Profile</a>
@@ -141,36 +150,30 @@ async function loadStudent(user, u) {
 
   markAttendanceBtn.onclick = async () => {
     if (settings.locked) return alert("Attendance locked");
-
     const session = allowedSession();
     if (!session) return alert("Not allowed time");
 
     try {
-      const gps = await checkGPSBest();
-      if (!gps.inside) return alert("Outside college");
+      const gps = await checkGPS();
+      if (!gps.inside) throw "Outside college";
 
       await addDoc(collection(db, "attendance"), {
         uid: user.uid,
         name: u.name,
         roll: u.roll,
-        email: u.email,
+        session,
         date: new Date().toLocaleDateString(),
         time: new Date().toLocaleTimeString(),
-        session,
         present: true,
         manual: false,
         markedBy: "student",
         gpsStatus: true,
-        latitude: gps.latitude,
-        longitude: gps.longitude,
-        accuracy: gps.accuracy,
-        distance: gps.distance,
+        ...gps,
         timestamp: new Date()
       });
-
       location.reload();
     } catch (e) {
-      alert(e + ". Request manual attendance.");
+      alert(e + ". You can request manual attendance.");
     }
   };
 
@@ -179,15 +182,12 @@ async function loadStudent(user, u) {
       uid: user.uid,
       name: u.name,
       roll: u.roll,
-      email: u.email,
-      date: new Date().toLocaleDateString(),
-      session: allowedSession(),
       requestedBy: "student",
-      gpsStatus: false,
+      session: allowedSession(),
       status: "pending",
       timestamp: new Date()
     });
-    alert("Request sent");
+    alert("Manual request sent");
   };
 
   const snap = await getDocs(collection(db, "attendance"));
@@ -202,7 +202,6 @@ async function loadStudent(user, u) {
       studentAttendanceTable.innerHTML += `
         <tr>
           <td>${a.date}</td>
-          <td>${a.time || "-"}</td>
           <td>${a.session}</td>
           <td>${a.present ? "✔" : "✖"}</td>
           <td>${a.gpsStatus ? "✔" : "✖"}</td>
@@ -211,12 +210,12 @@ async function loadStudent(user, u) {
     }
   });
 
-  stuPercent.innerText = total
-    ? Math.round((present / total) * 100) + "%"
-    : "0%";
+  stuPercent.innerText = total ? Math.round((present / total) * 100) + "%" : "0%";
 }
 
-/* ================= INCHARGE ================= */
+/* =========================================================
+   7. INCHARGE DASHBOARD
+========================================================= */
 async function loadIncharge(user, u) {
   menu.innerHTML = `
     <a onclick="showView('profileView')">Profile</a>
@@ -230,16 +229,14 @@ async function loadIncharge(user, u) {
 
   usersSnap.forEach(d => {
     const s = d.data();
-
-    // 🔥 FIX: match UID, not email
     if (s.role === "student" && s.inchargeId === u.uid) {
       inchargeStudentTable.innerHTML += `
         <tr>
           <td>${s.name}</td>
-          <td>${s.roll || "-"}</td>
+          <td>${s.roll}</td>
           <td>
-            <button onclick="requestManual('${s.uid}','${s.name}','${s.roll}','${s.email}')">
-              Request Manual
+            <button onclick="requestManual('${s.uid}','${s.name}','${s.roll}')">
+              Manual
             </button>
           </td>
         </tr>`;
@@ -247,21 +244,20 @@ async function loadIncharge(user, u) {
   });
 }
 
-window.requestManual = async (uid, name, roll, email) => {
+window.requestManual = async (uid, name, roll) => {
   await addDoc(collection(db, "manualRequests"), {
-    uid, name, roll, email,
-    date: new Date().toLocaleDateString(),
-    session: allowedSession(),
+    uid, name, roll,
     requestedBy: "incharge",
-    gpsStatus: false,
     status: "pending",
     timestamp: new Date()
   });
-  alert("Request sent");
+  alert("Manual request sent");
 };
 
-/* ================= HOD ================= */
-async function loadHod() {
+/* =========================================================
+   8. HOD DASHBOARD (VIEW ONLY)
+========================================================= */
+async function loadHod(u) {
   menu.innerHTML = `
     <a onclick="showView('profileView')">Profile</a>
     <a onclick="showView('hodAttendanceView')">Attendance</a>
@@ -270,6 +266,7 @@ async function loadHod() {
 
   const snap = await getDocs(collection(db, "attendance"));
   hodAttendanceTable.innerHTML = "";
+
   snap.forEach(d => {
     const a = d.data();
     hodAttendanceTable.innerHTML += `
@@ -283,8 +280,10 @@ async function loadHod() {
   });
 }
 
-/* ================= ADMIN ================= */
-async function loadAdmin() {
+/* =========================================================
+   9. ADMIN DASHBOARD
+========================================================= */
+async function loadAdmin(u) {
   menu.innerHTML = `
     <a onclick="showView('profileView')">Profile</a>
     <a onclick="showView('adminAttendanceView')">Attendance</a>
@@ -293,27 +292,25 @@ async function loadAdmin() {
     <a onclick="logout()">Logout</a>`;
   showView("adminAttendanceView");
 
-  const snap = await getDocs(collection(db, "attendance"));
+  const attSnap = await getDocs(collection(db, "attendance"));
   adminAttendanceTable.innerHTML = "";
-  snap.forEach(d => {
+
+  attSnap.forEach(d => {
     const a = d.data();
     adminAttendanceTable.innerHTML += `
-      <tr onclick="showMap(${a.latitude},${a.longitude},${a.distance || 0},'${a.name}','${a.roll}')">
+      <tr>
         <td>${a.name}</td>
         <td>${a.roll}</td>
         <td>${a.date}</td>
-        <td>${a.time || "-"}</td>
         <td>${a.session}</td>
         <td>${a.gpsStatus ? "✔" : "✖"}</td>
-        <td>${a.accuracy || "-"}</td>
-        <td>${a.distance || "-"}</td>
         <td>${a.manual ? "✔" : "✖"}</td>
-        <td>${a.markedBy}</td>
       </tr>`;
   });
 
   const reqSnap = await getDocs(collection(db, "manualRequests"));
   adminManualTable.innerHTML = "";
+
   reqSnap.forEach(d => {
     const r = d.data();
     if (r.status === "pending") {
@@ -321,8 +318,6 @@ async function loadAdmin() {
         <tr>
           <td>${r.name}</td>
           <td>${r.roll}</td>
-          <td>${r.date}</td>
-          <td>${r.session}</td>
           <td>${r.requestedBy}</td>
           <td>
             <button onclick="approveManual('${d.id}')">Approve</button>
@@ -352,8 +347,8 @@ window.approveManual = async (id) => {
 
   await addDoc(collection(db, "attendance"), {
     ...r,
-    manual: true,
     present: true,
+    manual: true,
     markedBy: "admin",
     timestamp: new Date()
   });
@@ -367,7 +362,9 @@ window.rejectManual = async (id) => {
   location.reload();
 };
 
-/* ================= LOGOUT ================= */
+/* =========================================================
+   10. LOGOUT
+========================================================= */
 window.logout = async () => {
   await signOut(auth);
   location.href = "login.html";
