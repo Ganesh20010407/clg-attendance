@@ -1,8 +1,9 @@
-/* =========================================================
-   1. FIREBASE IMPORTS & INIT
-========================================================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import {
   getFirestore,
   collection,
@@ -14,18 +15,16 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
+/* ================= FIREBASE ================= */
 const app = initializeApp({
   apiKey: "AIzaSyAFUziq6QGKCwujtiTL-4Rk823FE12ZDGU",
   authDomain: "markattnedance.firebaseapp.com",
   projectId: "markattnedance"
 });
-
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* =========================================================
-   2. DOM + MENU HANDLING
-========================================================= */
+/* ================= DOM ================= */
 const menu = document.getElementById("menu");
 const menuToggle = document.getElementById("menuToggle");
 const views = document.querySelectorAll(".view");
@@ -33,15 +32,13 @@ const views = document.querySelectorAll(".view");
 menuToggle.onclick = () => menu.classList.toggle("show");
 
 function showView(id) {
-  views.forEach(v => v.style.display = "none");
+  views.forEach(v => (v.style.display = "none"));
   document.getElementById(id).style.display = "block";
   menu.classList.remove("show");
 }
 window.showView = showView;
 
-/* =========================================================
-   3. GLOBAL SETTINGS (ADMIN CONTROLLED)
-========================================================= */
+/* ================= SETTINGS ================= */
 let settings = {
   collegeLat: 16.5062,
   collegeLng: 80.6480,
@@ -54,44 +51,56 @@ let settings = {
   anEnd: "16:00"
 };
 
-/* =========================================================
-   4. AUTH STATE & ROLE ROUTER
-========================================================= */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    location.href = "login.html";
-    return;
-  }
+/* ================= AUTH ================= */
+onAuthStateChanged(auth, async user => {
+  if (!user) return (location.href = "login.html");
 
-  const snap = await getDoc(doc(db, "users", user.uid));
-  if (!snap.exists()) {
-    alert("Profile missing. Please re-register.");
+  // ✅ FIX 1: use UID (not email)
+  const userSnap = await getDoc(doc(db, "users", user.uid));
+  if (!userSnap.exists()) {
+    alert("User record missing");
     await signOut(auth);
-    return;
+    return (location.href = "login.html");
   }
 
-  const u = snap.data();
+  const u = userSnap.data();
 
-  /* PROFILE COMMON */
-  pName.innerText = u.name || "-";
-  pEmail.innerText = u.email || "-";
-  pRole.innerText = u.role || "-";
+  // ✅ FIX 2: block unapproved staff
+  if (u.role !== "student" && !u.approved) {
+    alert("Waiting for admin approval");
+    await signOut(auth);
+    return (location.href = "login.html");
+  }
+
+  // profile
+  pName.innerText = u.name;
+  pEmail.innerText = u.email;
+  pRole.innerText = u.role;
   pPhone.innerText = u.phone || "-";
-  pIncharge.innerText = u.inchargeId || "-";
-  pHod.innerText = u.hodId || "-";
 
+  // ✅ FIX 3: resolve incharge / hod names using IDs
+  if (u.inchargeId) {
+    const incSnap = await getDoc(doc(db, "users", u.inchargeId));
+    pIncharge.innerText = incSnap.exists() ? incSnap.data().name : "-";
+  } else pIncharge.innerText = "-";
+
+  if (u.hodId) {
+    const hodSnap = await getDoc(doc(db, "users", u.hodId));
+    pHod.innerText = hodSnap.exists() ? hodSnap.data().name : "-";
+  } else pHod.innerText = "-";
+
+  // load settings
   const sSnap = await getDoc(doc(db, "settings", "attendance"));
   if (sSnap.exists()) settings = sSnap.data();
 
+  // role routing
   if (u.role === "student") loadStudent(user, u);
-  if (u.role === "incharge") loadIncharge(user, u);
-  if (u.role === "hod") loadHod(u);
-  if (u.role === "admin") loadAdmin(u);
+  if (u.role === "incharge") loadIncharge(user);
+  if (u.role === "hod") loadHod();
+  if (u.role === "admin") loadAdmin();
 });
 
-/* =========================================================
-   5. TIME & GPS HELPERS
-========================================================= */
+/* ================= TIME ================= */
 function allowedSession() {
   const t = new Date().toTimeString().slice(0, 5);
   if (t >= settings.fnStart && t <= settings.fnEnd) return "FN";
@@ -99,20 +108,20 @@ function allowedSession() {
   return null;
 }
 
+/* ================= GPS ================= */
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3;
-  const φ1 = lat1 * Math.PI / 180;
-  const φ2 = lat2 * Math.PI / 180;
-  const Δφ = (lat2 - lat1) * Math.PI / 180;
-  const Δλ = (lon2 - lon1) * Math.PI / 180;
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
   const a =
     Math.sin(Δφ / 2) ** 2 +
-    Math.cos(φ1) * Math.cos(φ2) *
-    Math.sin(Δλ / 2) ** 2;
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function checkGPS() {
+function checkGPSBest() {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(
       pos => {
@@ -121,13 +130,16 @@ function checkGPS() {
           return reject("Low GPS accuracy");
 
         const dist = getDistance(
-          latitude, longitude,
-          settings.collegeLat, settings.collegeLng
+          latitude,
+          longitude,
+          settings.collegeLat,
+          settings.collegeLng
         );
 
         resolve({
           inside: dist <= settings.radius,
-          latitude, longitude,
+          latitude,
+          longitude,
           accuracy,
           distance: Math.round(dist)
         });
@@ -138,9 +150,7 @@ function checkGPS() {
   });
 }
 
-/* =========================================================
-   6. STUDENT DASHBOARD
-========================================================= */
+/* ================= STUDENT ================= */
 async function loadStudent(user, u) {
   menu.innerHTML = `
     <a onclick="showView('profileView')">Profile</a>
@@ -150,58 +160,52 @@ async function loadStudent(user, u) {
 
   markAttendanceBtn.onclick = async () => {
     if (settings.locked) return alert("Attendance locked");
+
     const session = allowedSession();
-    if (!session) return alert("Not allowed time");
+    if (!session) return alert("Invalid time");
 
     try {
-      const gps = await checkGPS();
-      if (!gps.inside) throw "Outside college";
+      const gps = await checkGPSBest();
+      if (!gps.inside) return alert("Outside college");
 
       await addDoc(collection(db, "attendance"), {
-        uid: user.uid,
         name: u.name,
         roll: u.roll,
-        session,
+        email: u.email,
         date: new Date().toLocaleDateString(),
         time: new Date().toLocaleTimeString(),
+        session,
         present: true,
         manual: false,
         markedBy: "student",
         gpsStatus: true,
-        ...gps,
+        latitude: gps.latitude,
+        longitude: gps.longitude,
+        accuracy: gps.accuracy,
+        distance: gps.distance,
         timestamp: new Date()
       });
+
       location.reload();
     } catch (e) {
-      alert(e + ". You can request manual attendance.");
+      alert(e);
     }
   };
 
-  requestManualBtn.onclick = async () => {
-    await addDoc(collection(db, "manualRequests"), {
-      uid: user.uid,
-      name: u.name,
-      roll: u.roll,
-      requestedBy: "student",
-      session: allowedSession(),
-      status: "pending",
-      timestamp: new Date()
-    });
-    alert("Manual request sent");
-  };
-
   const snap = await getDocs(collection(db, "attendance"));
-  let total = 0, present = 0;
   studentAttendanceTable.innerHTML = "";
+  let total = 0,
+    present = 0;
 
   snap.forEach(d => {
     const a = d.data();
-    if (a.uid === user.uid) {
+    if (a.email === u.email) {
       total++;
       if (a.present) present++;
       studentAttendanceTable.innerHTML += `
         <tr>
           <td>${a.date}</td>
+          <td>${a.time}</td>
           <td>${a.session}</td>
           <td>${a.present ? "✔" : "✖"}</td>
           <td>${a.gpsStatus ? "✔" : "✖"}</td>
@@ -210,33 +214,33 @@ async function loadStudent(user, u) {
     }
   });
 
-  stuPercent.innerText = total ? Math.round((present / total) * 100) + "%" : "0%";
+  stuPercent.innerText = total
+    ? Math.round((present / total) * 100) + "%"
+    : "0%";
 }
 
-/* =========================================================
-   7. INCHARGE DASHBOARD
-========================================================= */
-async function loadIncharge(user, u) {
+/* ================= INCHARGE ================= */
+async function loadIncharge(user) {
   menu.innerHTML = `
     <a onclick="showView('profileView')">Profile</a>
     <a onclick="showView('inchargeStudentsView')">Students</a>
-    <a onclick="showView('inchargeAttendanceView')">Attendance</a>
     <a onclick="logout()">Logout</a>`;
   showView("inchargeStudentsView");
 
-  const usersSnap = await getDocs(collection(db, "users"));
+  const users = await getDocs(collection(db, "users"));
   inchargeStudentTable.innerHTML = "";
 
-  usersSnap.forEach(d => {
+  users.forEach(d => {
     const s = d.data();
-    if (s.role === "student" && s.inchargeId === u.uid) {
+    // ✅ FIX: compare using inchargeId + uid
+    if (s.role === "student" && s.inchargeId === user.uid) {
       inchargeStudentTable.innerHTML += `
         <tr>
           <td>${s.name}</td>
           <td>${s.roll}</td>
           <td>
-            <button onclick="requestManual('${s.uid}','${s.name}','${s.roll}')">
-              Manual
+            <button onclick="requestManual('${s.name}','${s.roll}','${s.email}')">
+              Request Manual
             </button>
           </td>
         </tr>`;
@@ -244,20 +248,8 @@ async function loadIncharge(user, u) {
   });
 }
 
-window.requestManual = async (uid, name, roll) => {
-  await addDoc(collection(db, "manualRequests"), {
-    uid, name, roll,
-    requestedBy: "incharge",
-    status: "pending",
-    timestamp: new Date()
-  });
-  alert("Manual request sent");
-};
-
-/* =========================================================
-   8. HOD DASHBOARD (VIEW ONLY)
-========================================================= */
-async function loadHod(u) {
+/* ================= HOD ================= */
+async function loadHod() {
   menu.innerHTML = `
     <a onclick="showView('profileView')">Profile</a>
     <a onclick="showView('hodAttendanceView')">Attendance</a>
@@ -280,51 +272,33 @@ async function loadHod(u) {
   });
 }
 
-/* =========================================================
-   9. ADMIN DASHBOARD
-========================================================= */
-async function loadAdmin(u) {
+/* ================= ADMIN ================= */
+async function loadAdmin() {
   menu.innerHTML = `
     <a onclick="showView('profileView')">Profile</a>
     <a onclick="showView('adminAttendanceView')">Attendance</a>
-    <a onclick="showView('adminManualView')">Manual Requests</a>
     <a onclick="showView('adminSettingsView')">Settings</a>
     <a onclick="logout()">Logout</a>`;
   showView("adminAttendanceView");
 
-  const attSnap = await getDocs(collection(db, "attendance"));
+  const snap = await getDocs(collection(db, "attendance"));
   adminAttendanceTable.innerHTML = "";
 
-  attSnap.forEach(d => {
+  snap.forEach(d => {
     const a = d.data();
     adminAttendanceTable.innerHTML += `
       <tr>
         <td>${a.name}</td>
         <td>${a.roll}</td>
         <td>${a.date}</td>
+        <td>${a.time}</td>
         <td>${a.session}</td>
         <td>${a.gpsStatus ? "✔" : "✖"}</td>
+        <td>${a.accuracy || "-"}</td>
+        <td>${a.distance || "-"}</td>
         <td>${a.manual ? "✔" : "✖"}</td>
+        <td>${a.markedBy}</td>
       </tr>`;
-  });
-
-  const reqSnap = await getDocs(collection(db, "manualRequests"));
-  adminManualTable.innerHTML = "";
-
-  reqSnap.forEach(d => {
-    const r = d.data();
-    if (r.status === "pending") {
-      adminManualTable.innerHTML += `
-        <tr>
-          <td>${r.name}</td>
-          <td>${r.roll}</td>
-          <td>${r.requestedBy}</td>
-          <td>
-            <button onclick="approveManual('${d.id}')">Approve</button>
-            <button onclick="rejectManual('${d.id}')">Reject</button>
-          </td>
-        </tr>`;
-    }
   });
 
   saveSettingsBtn.onclick = async () => {
@@ -340,31 +314,7 @@ async function loadAdmin(u) {
   };
 }
 
-window.approveManual = async (id) => {
-  const ref = doc(db, "manualRequests", id);
-  const snap = await getDoc(ref);
-  const r = snap.data();
-
-  await addDoc(collection(db, "attendance"), {
-    ...r,
-    present: true,
-    manual: true,
-    markedBy: "admin",
-    timestamp: new Date()
-  });
-
-  await updateDoc(ref, { status: "approved" });
-  location.reload();
-};
-
-window.rejectManual = async (id) => {
-  await updateDoc(doc(db, "manualRequests", id), { status: "rejected" });
-  location.reload();
-};
-
-/* =========================================================
-   10. LOGOUT
-========================================================= */
+/* ================= LOGOUT ================= */
 window.logout = async () => {
   await signOut(auth);
   location.href = "login.html";
