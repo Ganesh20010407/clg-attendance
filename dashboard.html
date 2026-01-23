@@ -7,139 +7,112 @@
 <body>
 
 <!-- HEADER -->
-<div class="header">
-  <h2 id="dashboardTitle">Dashboard</h2>
-  <button id="logoutBtn">Logout</button>
-</div>
+<header class="topbar">
+  <div class="logo">Smart Attendance System</div>
+  <div class="user-info">
+    <span id="roleText">ADMIN</span>
+    <button id="logoutBtn">Logout</button>
+  </div>
+</header>
 
 <div class="layout">
 
-  <!-- SIDEBAR MENU -->
-  <div class="sidebar">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
 
-    <!-- COMMON -->
-    <button data-role="all" onclick="showSection('overview')">Overview</button>
-    <button data-role="all" onclick="showSection('profile')">Profile</button>
-
-    <!-- STUDENT -->
-    <button data-role="student" onclick="showSection('markAttendance')">
-      Mark Attendance
-    </button>
-    <button data-role="student" onclick="showSection('myAttendance')">
-      My Attendance
+    <button class="menu-btn" onclick="showAdminProfile()">
+      My Profile
     </button>
 
-    <!-- INCHARGE / HOD / ADMIN -->
-    <button data-role="approver" onclick="showSection('studentApprovals')">
-      Student Approvals
-    </button>
-
-    <!-- ADMIN ONLY -->
-    <button data-role="admin" onclick="showSection('staffApprovals')">
-      Staff Approvals
-    </button>
-    <button data-role="admin" onclick="showSection('approvalPermissions')">
-      Approval Permissions
-    </button>
+    <!-- APPROVALS -->
+    <div class="menu-group">
+      <div class="menu-title" onclick="toggleMenu('approvalsMenu')">
+        ▶ Approvals
+      </div>
+      <div id="approvalsMenu" class="submenu">
+        <button onclick="showSection('staffApprovals')">Staff Registrations</button>
+        <button onclick="showSection('studentApprovals')">Student Registrations</button>
+        <button onclick="showSection('approvalPermissions')">Approval Permissions</button>
+      </div>
+    </div>
 
     <!-- ATTENDANCE -->
-    <button data-role="staff" onclick="showSection('attendanceView')">
-      Attendance
-    </button>
+    <div class="menu-group">
+      <div class="menu-title" onclick="toggleMenu('attendanceMenu')">
+        ▶ Attendance
+      </div>
+      <div id="attendanceMenu" class="submenu">
+        <button onclick="showSection('attendanceView')">View</button>
+        <button onclick="downloadExcel()">Download Excel</button>
+      </div>
+    </div>
 
     <!-- SETTINGS -->
-    <button data-role="admin" onclick="showSection('settings')">
-      Settings
-    </button>
-
-  </div>
-
-  <!-- MAIN CONTENT -->
-  <div class="content">
-
-    <!-- OVERVIEW -->
-    <div id="overview" class="section">
-      <h3>Overview</h3>
-      <p>Welcome to the system</p>
+    <div class="menu-group">
+      <div class="menu-title" onclick="toggleMenu('settingsMenu')">
+        ▶ Settings
+      </div>
+      <div id="settingsMenu" class="submenu">
+        <button onclick="showSection('settings')">Timings</button>
+      </div>
     </div>
 
-    <!-- PROFILE -->
-    <div id="profile" class="section hidden">
-      <h3>My Profile</h3>
-      <p>Name: <span id="pName"></span></p>
-      <p>Role: <span id="pRole"></span></p>
-      <p>Phone: <span id="pPhone"></span></p>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- ADMIN PROFILE (DEFAULT) -->
+    <div id="adminProfile" class="section">
+      <div class="profile-card">
+        <img id="profilePic"
+          src="https://ui-avatars.com/api/?name=Admin&background=1f2937&color=fff">
+        <h3 id="pName">Admin</h3>
+        <p id="pRole">ADMIN</p>
+        <p id="pEmail"></p>
+        <p id="pPhone"></p>
+      </div>
     </div>
 
-    <!-- STUDENT: MARK ATTENDANCE -->
-    <div id="markAttendance" class="section hidden">
-      <h3>Mark Attendance</h3>
-      <button>Mark FN</button>
-      <button>Mark AN</button>
-    </div>
-
-    <!-- STUDENT: VIEW ATTENDANCE -->
-    <div id="myAttendance" class="section hidden">
-      <h3>My Attendance</h3>
-      <p>Attendance history table here</p>
-    </div>
-
-    <!-- STUDENT APPROVALS (INCHARGE / HOD / ADMIN) -->
-    <div id="studentApprovals" class="section hidden">
-      <h3>Student Registration Approvals</h3>
-      <table>
-        <tr>
-          <th>Name</th>
-          <th>Roll</th>
-          <th>Action</th>
-        </tr>
-      </table>
-    </div>
-
-    <!-- STAFF APPROVALS (ADMIN) -->
+    <!-- STAFF APPROVALS -->
     <div id="staffApprovals" class="section hidden">
       <h3>Staff Registration Approvals</h3>
-      <table>
-        <tr>
-          <th>Name</th>
-          <th>Role</th>
-          <th>Action</th>
-        </tr>
-      </table>
+      <p>Staff approval table here</p>
     </div>
 
-    <!-- APPROVAL PERMISSIONS (ADMIN) -->
+    <!-- STUDENT APPROVALS -->
+    <div id="studentApprovals" class="section hidden">
+      <h3>Student Registration Approvals</h3>
+      <p>Student approval table here</p>
+    </div>
+
+    <!-- APPROVAL PERMISSIONS -->
     <div id="approvalPermissions" class="section hidden">
       <h3>Approval Permissions</h3>
-      <p>Toggle Incharge / HOD approval rights</p>
+      <p>Toggle permissions for HOD / Incharge</p>
     </div>
 
-    <!-- ATTENDANCE VIEW -->
+    <!-- ATTENDANCE -->
     <div id="attendanceView" class="section hidden">
       <h3>Attendance</h3>
-      <button>Download Excel</button>
+      <p>Attendance view here</p>
     </div>
 
     <!-- SETTINGS -->
     <div id="settings" class="section hidden">
-      <h3>Settings</h3>
-
+      <h3>Attendance Timings</h3>
       <label>FN Start</label>
-      <input type="time">
-
+      <input type="time"><br><br>
       <label>FN End</label>
-      <input type="time">
-
+      <input type="time"><br><br>
       <label>AN Start</label>
-      <input type="time">
-
+      <input type="time"><br><br>
       <label>AN End</label>
-      <input type="time">
-
-      <button>Save Settings</button>
+      <input type="time"><br><br>
+      <button>Save</button>
     </div>
 
-  </div>
+  </main>
 </div>
 
 <script type="module" src="dashboard.js"></script>

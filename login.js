@@ -1,121 +1,75 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged, signOut }
+  from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { doc, getDoc }
+  from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-/* ================= FIREBASE ================= */
-const app = initializeApp({
-  apiKey: "AIzaSyAFUziq6QGKCwujtiTL-4Rk823FE12ZDGU",
-  authDomain: "markattnedance.firebaseapp.com",
-  projectId: "markattnedance"
-});
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-/* ================= DOM ================= */
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const loginBtn = document.getElementById("loginBtn");
-const status = document.getElementById("status");
-const loading = document.getElementById("loading");
-
-/* ================= ROLE FROM INDEX ================= */
-const selectedRole = localStorage.getItem("loginRole");
-
-if (!selectedRole) {
-  alert("Please select who is logging in");
-  window.location.href = "index.html";
+/* ===== HIDE ALL SECTIONS ===== */
+function hideAllSections() {
+  document.querySelectorAll(".section")
+    .forEach(s => s.classList.add("hidden"));
 }
 
-/* ================= HELPERS ================= */
-function showError(msg) {
-  status.innerText = msg;
-  status.style.color = "red";
-}
+/* ===== SHOW ADMIN PROFILE ===== */
+window.showAdminProfile = function () {
+  hideAllSections();
+  document.getElementById("adminProfile").classList.remove("hidden");
+};
 
-function showLoading(msg = "Logging in...") {
-  loading.innerText = msg;
-  loading.style.display = "block";
-}
+/* ===== SHOW OTHER SECTIONS ===== */
+window.showSection = function (id) {
+  hideAllSections();
+  document.getElementById(id).classList.remove("hidden");
+};
 
-function hideLoading() {
-  loading.style.display = "none";
-}
+/* ===== COLLAPSIBLE MENU ===== */
+window.toggleMenu = function (id) {
+  const menu = document.getElementById(id);
+  menu.style.display =
+    menu.style.display === "block" ? "none" : "block";
+};
 
-/* ================= LOGIN ================= */
-loginBtn.addEventListener("click", async () => {
-  status.innerText = "";
-
-  const email = emailInput.value.trim();
-  const password = passwordInput.value;
-
-  if (!email || !password) {
-    showError("Please enter email and password");
+/* ===== AUTH CHECK ===== */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    location.href = "login.html";
     return;
   }
 
-  loginBtn.disabled = true;
-  showLoading();
-
-  try {
-    // 🔐 Firebase Auth
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-
-    // 🔍 Fetch user data
-    const userSnap = await getDoc(doc(db, "users", cred.user.uid));
-    if (!userSnap.exists()) {
-      await signOut(auth);
-      throw { message: "User record not found" };
-    }
-
-    const u = userSnap.data();
-
-    // ❌ ROLE MISMATCH
-    if (u.role !== selectedRole) {
-      await signOut(auth);
-      throw { message: `You selected ${selectedRole}, but your role is ${u.role}` };
-    }
-
-    // ⏳ APPROVAL CHECK
-    if (u.role !== "student" && !u.approved) {
-      await signOut(auth);
-      throw { message: "Waiting for admin approval" };
-    }
-
-    // ✅ SUCCESS
-    window.location.href = "dashboard.html";
-
-  } catch (err) {
-    hideLoading();
-    loginBtn.disabled = false;
-
-    // 🔥 CLEAN ERROR HANDLING
-    if (err.code) {
-      switch (err.code) {
-        case "auth/user-not-found":
-          showError("User not found. Please register.");
-          break;
-        case "auth/wrong-password":
-          showError("Wrong password.");
-          break;
-        case "auth/invalid-email":
-          showError("Invalid email format.");
-          break;
-        case "auth/network-request-failed":
-          showError("Network error. Check internet.");
-          break;
-        default:
-          showError(err.message);
-      }
-    } else {
-      showError(err.message || "Login failed");
-    }
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (!snap.exists()) {
+    location.href = "login.html";
+    return;
   }
+
+  const u = snap.data();
+
+  if (u.role !== "admin") {
+    alert("Access denied");
+    location.href = "login.html";
+    return;
+  }
+
+  // header role
+  document.getElementById("roleText").innerText = "ADMIN";
+
+  // fill profile
+  document.getElementById("pName").innerText = u.name;
+  document.getElementById("pRole").innerText = "ADMIN";
+  document.getElementById("pEmail").innerText = u.email;
+  document.getElementById("pPhone").innerText = u.phone || "-";
+
+  // default view
+  showAdminProfile();
 });
+
+/* ===== LOGOUT ===== */
+document.getElementById("logoutBtn").onclick = () => {
+  signOut(auth);
+  location.href = "login.html";
+};
+
+/* ===== PLACEHOLDER ===== */
+window.downloadExcel = function () {
+  alert("Excel download logic will be added");
+};
