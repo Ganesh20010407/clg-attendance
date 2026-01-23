@@ -11,7 +11,7 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-/* FIREBASE */
+/* ================= FIREBASE ================= */
 const app = initializeApp({
   apiKey: "AIzaSyAFUziq6QGKCwujtiTL-4Rk823FE12ZDGU",
   authDomain: "markattnedance.firebaseapp.com",
@@ -20,12 +20,13 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* DOM */
+/* ================= DOM ================= */
 const menu = document.getElementById("menu");
 const menuToggle = document.getElementById("menuToggle");
 const views = document.querySelectorAll(".view");
 
 menuToggle.onclick = () => menu.classList.toggle("show");
+
 function showView(id) {
   views.forEach(v => v.style.display = "none");
   document.getElementById(id).style.display = "block";
@@ -33,7 +34,7 @@ function showView(id) {
 }
 window.showView = showView;
 
-/* SETTINGS */
+/* ================= SETTINGS ================= */
 let settings = {
   collegeLat: 16.5062,
   collegeLng: 80.6480,
@@ -46,48 +47,59 @@ let settings = {
   anEnd: "16:00"
 };
 
-/* AUTH */
+/* ================= AUTH ================= */
 onAuthStateChanged(auth, async (user) => {
-  if (!user) return location.href = "login.html";
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
 
-  const userSnap = await getDoc(doc(db, "users", user.email));
+  // 🔥 FIX: Use UID (NOT email)
+  const userSnap = await getDoc(doc(db, "users", user.uid));
+  if (!userSnap.exists()) {
+    alert("User profile missing");
+    return;
+  }
+
   const u = userSnap.data();
 
-  pName.innerText = u.name;
-  pEmail.innerText = u.email;
-  pRole.innerText = u.role;
+  /* PROFILE */
+  pName.innerText = u.name || "-";
+  pEmail.innerText = u.email || "-";
+  pRole.innerText = u.role || "-";
   pPhone.innerText = u.phone || "-";
-  pIncharge.innerText = u.inchargeEmail || "-";
-  pHod.innerText = u.hodEmail || "-";
+  pIncharge.innerText = u.inchargeId || "-";
+  pHod.innerText = u.hodId || "-";
 
   const sSnap = await getDoc(doc(db, "settings", "attendance"));
   if (sSnap.exists()) settings = sSnap.data();
 
   if (u.role === "student") loadStudent(user, u);
-  if (u.role === "incharge") loadIncharge(user);
+  if (u.role === "incharge") loadIncharge(user, u);
   if (u.role === "hod") loadHod();
   if (u.role === "admin") loadAdmin();
 });
 
-/* TIME */
+/* ================= TIME ================= */
 function allowedSession() {
-  const t = new Date().toTimeString().slice(0,5);
+  const t = new Date().toTimeString().slice(0, 5);
   if (t >= settings.fnStart && t <= settings.fnEnd) return "FN";
   if (t >= settings.anStart && t <= settings.anEnd) return "AN";
   return null;
 }
 
-/* GPS */
+/* ================= GPS ================= */
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3;
-  const φ1 = lat1 * Math.PI/180;
-  const φ2 = lat2 * Math.PI/180;
-  const Δφ = (lat2-lat1) * Math.PI/180;
-  const Δλ = (lon2-lon1) * Math.PI/180;
-  const a = Math.sin(Δφ/2)**2 +
-            Math.cos(φ1)*Math.cos(φ2)*
-            Math.sin(Δλ/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(Δφ / 2) ** 2 +
+    Math.cos(φ1) * Math.cos(φ2) *
+    Math.sin(Δλ / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function checkGPSBest() {
@@ -119,7 +131,7 @@ function checkGPSBest() {
   });
 }
 
-/* STUDENT */
+/* ================= STUDENT ================= */
 async function loadStudent(user, u) {
   menu.innerHTML = `
     <a onclick="showView('profileView')">Profile</a>
@@ -129,6 +141,7 @@ async function loadStudent(user, u) {
 
   markAttendanceBtn.onclick = async () => {
     if (settings.locked) return alert("Attendance locked");
+
     const session = allowedSession();
     if (!session) return alert("Not allowed time");
 
@@ -137,9 +150,10 @@ async function loadStudent(user, u) {
       if (!gps.inside) return alert("Outside college");
 
       await addDoc(collection(db, "attendance"), {
+        uid: user.uid,
         name: u.name,
         roll: u.roll,
-        email: user.email,
+        email: u.email,
         date: new Date().toLocaleDateString(),
         time: new Date().toLocaleTimeString(),
         session,
@@ -153,6 +167,7 @@ async function loadStudent(user, u) {
         distance: gps.distance,
         timestamp: new Date()
       });
+
       location.reload();
     } catch (e) {
       alert(e + ". Request manual attendance.");
@@ -161,9 +176,10 @@ async function loadStudent(user, u) {
 
   requestManualBtn.onclick = async () => {
     await addDoc(collection(db, "manualRequests"), {
+      uid: user.uid,
       name: u.name,
       roll: u.roll,
-      email: user.email,
+      email: u.email,
       date: new Date().toLocaleDateString(),
       session: allowedSession(),
       requestedBy: "student",
@@ -180,7 +196,7 @@ async function loadStudent(user, u) {
 
   snap.forEach(d => {
     const a = d.data();
-    if (a.email === user.email) {
+    if (a.uid === user.uid) {
       total++;
       if (a.present) present++;
       studentAttendanceTable.innerHTML += `
@@ -194,11 +210,14 @@ async function loadStudent(user, u) {
         </tr>`;
     }
   });
-  stuPercent.innerText = total ? Math.round((present/total)*100)+"%" : "0%";
+
+  stuPercent.innerText = total
+    ? Math.round((present / total) * 100) + "%"
+    : "0%";
 }
 
-/* INCHARGE */
-async function loadIncharge(user) {
+/* ================= INCHARGE ================= */
+async function loadIncharge(user, u) {
   menu.innerHTML = `
     <a onclick="showView('profileView')">Profile</a>
     <a onclick="showView('inchargeStudentsView')">Students</a>
@@ -206,17 +225,20 @@ async function loadIncharge(user) {
     <a onclick="logout()">Logout</a>`;
   showView("inchargeStudentsView");
 
-  const users = await getDocs(collection(db, "users"));
+  const usersSnap = await getDocs(collection(db, "users"));
   inchargeStudentTable.innerHTML = "";
-  users.forEach(d => {
+
+  usersSnap.forEach(d => {
     const s = d.data();
-    if (s.role === "student" && s.inchargeEmail === user.email) {
+
+    // 🔥 FIX: match UID, not email
+    if (s.role === "student" && s.inchargeId === u.uid) {
       inchargeStudentTable.innerHTML += `
         <tr>
           <td>${s.name}</td>
-          <td>${s.roll}</td>
+          <td>${s.roll || "-"}</td>
           <td>
-            <button onclick="requestManual('${s.name}','${s.roll}','${s.email}')">
+            <button onclick="requestManual('${s.uid}','${s.name}','${s.roll}','${s.email}')">
               Request Manual
             </button>
           </td>
@@ -225,9 +247,9 @@ async function loadIncharge(user) {
   });
 }
 
-window.requestManual = async (name, roll, email) => {
+window.requestManual = async (uid, name, roll, email) => {
   await addDoc(collection(db, "manualRequests"), {
-    name, roll, email,
+    uid, name, roll, email,
     date: new Date().toLocaleDateString(),
     session: allowedSession(),
     requestedBy: "incharge",
@@ -238,7 +260,7 @@ window.requestManual = async (name, roll, email) => {
   alert("Request sent");
 };
 
-/* HOD */
+/* ================= HOD ================= */
 async function loadHod() {
   menu.innerHTML = `
     <a onclick="showView('profileView')">Profile</a>
@@ -261,7 +283,7 @@ async function loadHod() {
   });
 }
 
-/* ADMIN */
+/* ================= ADMIN ================= */
 async function loadAdmin() {
   menu.innerHTML = `
     <a onclick="showView('profileView')">Profile</a>
@@ -345,37 +367,7 @@ window.rejectManual = async (id) => {
   location.reload();
 };
 
-/* MAP */
-let map;
-window.showMap = (lat, lng, dist, name, roll) => {
-  if (!lat || !lng) return alert("No GPS data");
-
-  document.getElementById("mapContainer").style.display = "block";
-
-  const student = { lat, lng };
-  const college = { lat: settings.collegeLat, lng: settings.collegeLng };
-
-  map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 18,
-    center: student
-  });
-
-  new google.maps.Marker({ position: student, map, label: "S" });
-  new google.maps.Marker({ position: college, map, label: "C" });
-
-  new google.maps.Polyline({
-    path: [student, college],
-    strokeColor: "#FF0000",
-    strokeWeight: 2,
-    map
-  });
-
-  mapInfo.innerHTML = `
-    Student: ${name} (${roll})<br>
-    Distance: ${dist} meters`;
-};
-
-/* LOGOUT */
+/* ================= LOGOUT ================= */
 window.logout = async () => {
   await signOut(auth);
   location.href = "login.html";
