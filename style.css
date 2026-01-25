@@ -330,3 +330,7 @@ button:hover {
   padding: 8px 18px;
   border-radius: 20px;
 }
+
+.hidden {
+  display: none !important;
+}

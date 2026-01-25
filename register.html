@@ -3,59 +3,83 @@
 <head>
   <title>Register</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .hidden { display:none; }
+    header {
+      background:#333;
+      color:#fff;
+      padding:15px;
+      text-align:center;
+    }
+  </style>
 </head>
-<body>
+<body class="auth-page">
+
+<header>
+  <h2 id="who">Registering</h2>
+</header>
 
 <div class="container">
-  <h2>Register</h2>
-
-  <!-- ROLE DISPLAY -->
-  <div style="
-    text-align:center;
-    margin-bottom:15px;
-    padding:10px;
-    background:#f2f2f2;
-    border-radius:6px;
-    font-weight:bold;
-  ">
-    ACCOUNT TYPE:
-    <span id="roleLabel" style="text-transform:uppercase;"></span>
-  </div>
 
   <!-- COMMON -->
   <input id="name" placeholder="Full Name">
-  <input id="email" type="email" placeholder="Email">
+  <input id="email" placeholder="Email">
+  <input id="phone" placeholder="Phone">
   <input id="password" type="password" placeholder="Password">
 
-  <!-- PHONE (EVERYONE EXCEPT ADMIN & PRINCIPAL) -->
-  <div id="phoneBox">
-    <input id="phone" placeholder="Phone Number">
-  </div>
-
   <!-- STUDENT -->
-  <div id="studentFields">
-    <input id="roll" placeholder="Roll Number">
-    <select id="inchargeSelect">
-      <option value="">Select Incharge</option>
+  <div id="student" class="hidden">
+    <input id="studentId" placeholder="Student ID">
+    <select id="studentDept">
+      <option value="">Department</option>
+      <option>CSE</option><option>CSD</option><option>CSM</option>
+      <option>ECE</option><option>MECH</option>
+      <option>CIVIL</option><option>EEE</option>
     </select>
-    <select id="hodSelect">
-      <option value="">Select HOD</option>
+    <select id="year">
+      <option value="">Year</option>
+      <option>1</option><option>2</option>
+      <option>3</option><option>4</option>
+    </select>
+    <select id="inchargeId">
+      <option value="">Incharge</option>
     </select>
   </div>
 
   <!-- INCHARGE -->
-  <div id="inchargeFields">
-    <select id="hodForIncharge">
-      <option value="">Select Supervising HOD</option>
+  <div id="incharge" class="hidden">
+    <input id="staffIdIncharge" placeholder="Staff ID">
+    <select id="deptIncharge">
+      <option value="">Department</option>
+      <option>CSE</option><option>CSD</option><option>CSM</option>
+      <option>ECE</option><option>MECH</option>
+      <option>CIVIL</option><option>EEE</option>
+    </select>
+    <select id="hodId">
+      <option value="">HOD</option>
     </select>
   </div>
 
+  <!-- HOD -->
+  <div id="hod" class="hidden">
+    <input id="staffIdHod" placeholder="Staff ID">
+    <select id="deptHod">
+      <option value="">Department</option>
+      <option>CSE</option><option>CSD</option><option>CSM</option>
+      <option>ECE</option><option>MECH</option>
+      <option>CIVIL</option><option>EEE</option>
+    </select>
+  </div>
+
+  <!-- ADMIN / PRINCIPAL -->
+  <div id="authority" class="hidden">
+    <input id="staffIdAuth" placeholder="Staff ID">
+    <input id="invite" placeholder="Invite Code">
+  </div>
+
   <button id="registerBtn">Register</button>
-  <p id="status"></p>
 </div>
 
-<div id="loading">Creating account...</div>
-
-<script type="module" src="register.js"></script>
+<script src="register.js"></script>
 </body>
 </html>

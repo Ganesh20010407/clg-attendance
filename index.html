@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Attendance System</title>
+  <title>College Attendance System</title>
   <link rel="stylesheet" href="style.css">
   <style>
     body {
@@ -11,69 +11,138 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
+      margin: 0;
     }
 
-    .role-container {
+    .index-container {
       background: #fff;
-      padding: 40px;
-      border-radius: 12px;
+      padding: 45px 40px;
+      border-radius: 14px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.15);
       text-align: center;
       width: 90%;
-      max-width: 500px;
+      max-width: 420px;
+      z-index: 1;
     }
 
-    .role-container h2 {
-      margin-bottom: 25px;
+    h1 {
+      margin-bottom: 30px;
       color: #333;
     }
 
-    .roles {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 15px;
+    .main-btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: #333;
+      color: #fff;
+      margin-top: 12px;
+    }
+
+    .main-btn:hover {
+      background: #000;
+    }
+
+    /* ===== OVERLAY ===== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+
+    /* ===== MODAL ===== */
+    .role-modal {
+      background: #fff;
+      padding: 35px;
+      border-radius: 14px;
+      width: 90%;
+      max-width: 420px;
+      text-align: center;
+      transform: scale(0.7);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .overlay.show .role-modal {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .role-modal h2 {
+      margin-bottom: 20px;
+      color: #333;
     }
 
     .role-btn {
-      padding: 15px;
-      border-radius: 8px;
+      padding: 12px;
+      border-radius: 6px;
       background: #333;
       color: #fff;
       cursor: pointer;
       font-size: 15px;
-      transition: 0.3s;
-      user-select: none;
+      margin-top: 10px;
     }
 
     .role-btn:hover {
       background: #000;
-      transform: translateY(-2px);
     }
   </style>
 </head>
 <body>
 
-  <div class="role-container">
-    <h2>Who is logging in?</h2>
+<!-- MAIN -->
+<div class="index-container">
+  <h1>College Attendance System</h1>
 
-    <div class="roles">
-      <div class="role-btn" onclick="goLogin('student')">Student</div>
-      <div class="role-btn" onclick="goLogin('incharge')">Incharge</div>
-      <div class="role-btn" onclick="goLogin('hod')">HOD</div>
-      <div class="role-btn" onclick="goLogin('admin')">Admin</div>
-      <div class="role-btn" onclick="goLogin('principal')">Principal</div>
-    </div>
+  <button class="main-btn" onclick="goLogin()">Login</button>
+  <button class="main-btn" onclick="openRegister()">Register</button>
+</div>
+
+<!-- OVERLAY + MODAL -->
+<div class="overlay" id="overlay" onclick="closeRegister(event)">
+  <div class="role-modal">
+    <h2>Select Your Role</h2>
+
+    <div class="role-btn" onclick="registerAs('student')">Student</div>
+    <div class="role-btn" onclick="registerAs('incharge')">Incharge</div>
+    <div class="role-btn" onclick="registerAs('hod')">HOD</div>
+    <div class="role-btn" onclick="registerAs('admin')">Admin</div>
+    <div class="role-btn" onclick="registerAs('principal')">Principal</div>
   </div>
+</div>
 
-  <script>
-    function goLogin(role) {
-      // store role temporarily
-      localStorage.setItem("loginRole", role);
+<script>
+  function goLogin() {
+    localStorage.removeItem("userRole");
+    window.location.href = "login.html";
+  }
 
-      // redirect to login
-      window.location.href = "login.html";
+  function openRegister() {
+    const overlay = document.getElementById("overlay");
+    overlay.style.display = "flex";
+    setTimeout(() => overlay.classList.add("show"), 10);
+  }
+
+  function closeRegister(e) {
+    if (e.target.id === "overlay") {
+      const overlay = document.getElementById("overlay");
+      overlay.classList.remove("show");
+      setTimeout(() => overlay.style.display = "none", 200);
     }
-  </script>
+  }
+
+  function registerAs(role) {
+    localStorage.setItem("userRole", role);
+    window.location.href = "register.html";
+  }
+</script>
 
 </body>
 </html>
