@@ -9,25 +9,13 @@
 <div class="container">
   <h2>Login</h2>
 
-  <input placeholder="Email">
-  <input type="password" placeholder="Password">
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
 
-  <button>Login</button>
-
-  <p style="text-align:center; margin-top:15px;">
-    New user?
-    <a href="#" id="registerLink">Register</a>
-  </p>
+  <button id="loginBtn">Login</button>
+  <p id="status"></p>
 </div>
 
-<script>
-const role = localStorage.getItem("userRole");
-
-document.getElementById("registerLink").onclick = () => {
-  localStorage.setItem("userRole", role); // 🔴 IMPORTANT
-  window.location.href = "register.html";
-};
-</script>
-
+<script type="module" src="login.js"></script>
 </body>
 </html>

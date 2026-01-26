@@ -6,17 +6,17 @@ import {
   setDoc, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-/* ================= TOAST ================= */
+/* ========== TOAST ========== */
 function showToast(msg, type="success"){
   const c=document.getElementById("toast-container");
   const t=document.createElement("div");
   t.className=`toast ${type}`;
   t.innerText=msg;
   c.appendChild(t);
-  setTimeout(()=>t.remove(),3200);
+  setTimeout(()=>t.remove(),3000);
 }
 
-/* ================= MENU ================= */
+/* ========== MENU ========== */
 menuBtn.onclick=()=>sidebar.classList.toggle("hidden");
 logout.onclick=()=>signOut(auth).then(()=>location.href="login.html");
 
@@ -30,12 +30,12 @@ function show(id){
   sidebar.classList.add("hidden");
 
   if(id==="staff") loadStaff();
+  if(id==="approvals") loadApprovals();
   if(id==="settings") loadSettings();
   if(id==="attendance") loadAttendance();
-  if(id==="permissions") loadPermissions();
 }
 
-/* ================= AUTH ================= */
+/* ========== AUTH ========== */
 let me=null, records=[];
 
 onAuthStateChanged(auth, async user=>{
@@ -54,12 +54,10 @@ onAuthStateChanged(auth, async user=>{
   pEmail.innerText=me.email;
   pRole.innerText=me.role.toUpperCase();
 
-  if(me.role==="principal"){
-    document.querySelectorAll("button").forEach(b=>b.disabled=true);
-  }
+  loadApprovals();
 });
 
-/* ================= STAFF ================= */
+/* ========== STAFF ========== */
 async function loadStaff(){
   hodTable.innerHTML="";
   inchargeTable.innerHTML="";
@@ -80,7 +78,61 @@ async function loadStaff(){
   });
 }
 
-/* ================= SETTINGS ================= */
+/* ========== APPROVALS + 🔔 ========== */
+async function loadApprovals(){
+  approvalTable.innerHTML="";
+  let count=0;
+
+  const users=await getDocs(collection(db,"users"));
+  users.forEach(d=>{
+    const u=d.data();
+    if(!u.approved){
+      count++;
+      approvalTable.innerHTML+=`
+        <tr>
+          <td>Registration</td>
+          <td>${u.name}</td>
+          <td>${u.role}</td>
+          <td><button onclick="approveUser('${d.id}')">Approve</button></td>
+        </tr>`;
+    }
+  });
+
+  const perms=await getDocs(collection(db,"permissionRequests"));
+  perms.forEach(d=>{
+    const r=d.data();
+    if(r.status==="pending"){
+      count++;
+      approvalTable.innerHTML+=`
+        <tr>
+          <td>Permission</td>
+          <td>${r.name||"-"}</td>
+          <td>${r.role||"student"}</td>
+          <td><button onclick="approvePerm('${d.id}','${r.uid}')">Approve</button></td>
+        </tr>`;
+    }
+  });
+
+  notifyCount.innerText=count;
+  notifyCount.classList.toggle("hidden",count===0);
+}
+
+window.approveUser=async uid=>{
+  await updateDoc(doc(db,"users",uid),{approved:true});
+  showToast("User approved");
+  loadApprovals();
+};
+
+window.approvePerm=async (id,uid)=>{
+  await updateDoc(doc(db,"users",uid),{canMarkAttendance:true});
+  await updateDoc(doc(db,"permissionRequests",id),{status:"approved"});
+  showToast("Permission approved");
+  loadApprovals();
+};
+
+notifyBell.onclick=()=>show("approvals");
+
+/* ========== SETTINGS ========== */
 async function loadSettings(){
   const s=await getDoc(doc(db,"settings","attendance"));
   if(!s.exists()) return;
@@ -96,50 +148,30 @@ async function loadSettings(){
 
 saveTiming.onclick=async()=>{
   await setDoc(doc(db,"settings","attendance"),{
-    fnStart:fnStart.value,
-    fnEnd:fnEnd.value,
-    anStart:anStart.value,
-    anEnd:anEnd.value
+    fnStart:fnStart.value, fnEnd:fnEnd.value,
+    anStart:anStart.value, anEnd:anEnd.value
   },{merge:true});
   showToast("Timing saved");
 };
 
 saveGps.onclick=async()=>{
   await setDoc(doc(db,"settings","attendance"),{
-    lat:lat.value,
-    lng:lng.value,
-    radius:radius.value
+    lat:lat.value, lng:lng.value, radius:radius.value
   },{merge:true});
-  showToast("GPS settings saved");
+  showToast("GPS saved");
 };
 
-/* ================= HOLIDAYS ================= */
-addHoliday.onclick=async()=>{
-  await setDoc(doc(collection(db,"holidays")),{
-    date:holidayDate.value,
-    reason:holidayReason.value
-  });
-  showToast("Holiday added");
-  loadSettings();
-};
-
-window.removeHoliday=async id=>{
-  await deleteDoc(doc(db,"holidays",id));
-  showToast("Holiday removed","info");
-  loadSettings();
-};
-
-/* ================= ATTENDANCE ================= */
+/* ========== ATTENDANCE ========== */
 async function loadAttendance(){
   records=[];
-  const snap=await getDocs(collection(db,"attendance"));
+  const snap=await getDocs(collection(db,"attendanceRecords"));
   snap.forEach(d=>records.push(d.data()));
   renderAttendance();
 }
 
 function renderAttendance(){
   attTable.innerHTML="";
-  const today=new Date().toLocaleDateString();
+  const today=new Date().toISOString().split("T")[0];
   let data=[...records];
 
   if(attType.value==="today")
@@ -147,18 +179,18 @@ function renderAttendance(){
 
   const q=searchAtt.value.toLowerCase();
   if(q)
-    data=data.filter(r=>
-      r.studentName.toLowerCase().includes(q) ||
-      r.roll.toLowerCase().includes(q)
+    data=data.filter(r =>
+      (r.studentName||"").toLowerCase().includes(q) ||
+      (r.roll||"").toLowerCase().includes(q)
     );
 
   data.forEach(r=>{
     attTable.innerHTML+=`
       <tr>
         <td>${r.date}</td>
-        <td>${r.studentName}</td>
-        <td>${r.roll}</td>
-        <td>${r.year}</td>
+        <td>${r.studentName||"-"}</td>
+        <td>${r.roll||"-"}</td>
+        <td>${r.academicYear}</td>
         <td>${r.session}</td>
         <td>${r.status}</td>
       </tr>`;
@@ -171,33 +203,11 @@ searchAtt.onkeyup=renderAttendance;
 downloadAtt.onclick=()=>{
   let csv="Date,Name,Roll,Year,Session,Status\n";
   records.forEach(r=>{
-    csv+=`${r.date},${r.studentName},${r.roll},${r.year},${r.session},${r.status}\n`;
+    csv+=`${r.date},${r.studentName||""},${r.roll||""},${r.academicYear},${r.session},${r.status}\n`;
   });
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([csv]));
   a.download="attendance.csv";
   a.click();
   showToast("Attendance downloaded","info");
-};
-
-/* ================= PERMISSIONS ================= */
-async function loadPermissions(){
-  permTable.innerHTML="";
-  const snap=await getDocs(collection(db,"permissionRequests"));
-  snap.forEach(d=>{
-    permTable.innerHTML+=`
-      <tr>
-        <td>${d.data().role}</td>
-        <td>${d.data().status}</td>
-        <td>
-          <button onclick="grant('${d.id}')">Grant</button>
-        </td>
-      </tr>`;
-  });
-}
-
-window.grant=async id=>{
-  await updateDoc(doc(db,"permissionRequests",id),{status:"approved"});
-  showToast("Permission granted");
-  loadPermissions();
 };

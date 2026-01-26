@@ -173,3 +173,18 @@ requestPerm.onclick=async()=>{
   alert("Permission request sent");
   reqStatus.innerText="Request sent";
 };
+
+
+
+function showToast(msg, type = "info") {
+  const t = document.createElement("div");
+  t.className = `toast ${type}`;
+  t.innerText = msg;
+  document.body.appendChild(t);
+
+  setTimeout(() => t.classList.add("show"), 50);
+  setTimeout(() => {
+    t.classList.remove("show");
+    setTimeout(() => t.remove(), 300);
+  }, 3000);
+}

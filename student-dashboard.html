@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <button class="menu-btn" id="menuBtn">☰</button>
+  <span id="welcomeText">Welcome</span>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div data-sec="home">Home</div>
+    <div data-sec="profile">Profile</div>
+    <div data-sec="mark">Mark Attendance</div>
+    <div data-sec="history">Attendance History</div>
+    <div id="logout">Logout</div>
+  </nav>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- HOME -->
+    <section id="home" class="section">
+      <h3 id="wish"></h3>
+      <p>You can mark and view your attendance here.</p>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="profile" class="section hidden">
+      <div class="profile-card">
+        <img id="profileImg" class="profile-img" src="">
+        <h3 id="pName"></h3>
+        <p>Email: <span id="pEmail"></span></p>
+        <p>Phone: <span id="pPhone"></span></p>
+        <p>Student ID: <span id="pId"></span></p>
+        <p>Department: <span id="pDept"></span></p>
+        <p>Year: <span id="pYear"></span></p>
+        <p>Incharge: <span id="pIncharge"></span></p>
+      </div>
+    </section>
+
+    <!-- MARK ATTENDANCE -->
+    <section id="mark" class="section hidden center">
+      <h3>Mark Attendance</h3>
+
+      <p id="gpsStatus"></p>
+      <p id="permissionStatus"></p>
+
+      <button id="facialBtn">Facial Attendance</button>
+      <button id="manualBtn">Manual Attendance</button>
+
+      <p id="markMsg"></p>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="history" class="section hidden">
+      <h3>Attendance History</h3>
+
+      <div class="controls">
+        <select id="yearFilter">
+          <option value="">Year</option>
+          <option value="1">1st Year</option>
+          <option value="2">2nd Year</option>
+          <option value="3">3rd Year</option>
+          <option value="4">4th Year</option>
+        </select>
+
+        <select id="monthFilter">
+          <option value="">Month</option>
+          <option value="1">Jan</option>
+          <option value="2">Feb</option>
+          <option value="3">Mar</option>
+          <option value="4">Apr</option>
+          <option value="5">May</option>
+          <option value="6">Jun</option>
+          <option value="7">Jul</option>
+          <option value="8">Aug</option>
+          <option value="9">Sep</option>
+          <option value="10">Oct</option>
+          <option value="11">Nov</option>
+          <option value="12">Dec</option>
+        </select>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Session</th>
+            <th>Method</th>
+            <th>GPS</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="attTable"></tbody>
+      </table>
+    </section>
+
+  </main>
+</div>
+
+<script type="module" src="student-dashboard.js"></script>
+</body>
+</html>
