@@ -2,269 +2,312 @@ import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut }
 from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import {
-  collection, getDocs, getDoc, doc, setDoc, updateDoc
+  collection, getDocs, getDoc, doc,
+  updateDoc, addDoc, query, where
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-/* ========= TOAST ========= */
-function toast(msg){
-  const t=document.createElement("div");
-  t.className="toast";
-  t.innerText=msg;
-  document.getElementById("toast-container").appendChild(t);
-  setTimeout(()=>t.remove(),3000);
-}
+/* ========== STATE ========== */
+let me = null;
+let studentsCache = [];
+let todayData = [], recordData = [], activeData = [];
 
-/* ========= GLOBAL ========= */
-let me=null;
-let approved=[], pending=[], attendance=[];
-let canApprove=false;
+/* ========== DOM ========== */
+const sections = document.querySelectorAll(".section");
+const sidebar = document.getElementById("sidebar");
+const menuBtn = document.getElementById("menuBtn");
 
-/* ========= MENU ========= */
-menuBtn.onclick=()=>sidebar.classList.toggle("hidden");
-logout.onclick=()=>logoutConfirm.classList.remove("hidden");
-cancelLogout.onclick=()=>logoutConfirm.classList.add("hidden");
-confirmLogout.onclick=()=>signOut(auth).then(()=>location.href="login.html");
+const welcome = document.getElementById("welcome");
 
-document.querySelectorAll("[data-sec]").forEach(d=>{
-  d.onclick=()=>show(d.dataset.sec);
+/* Profile */
+const pPhoto = document.getElementById("pPhoto");
+const pName = document.getElementById("pName");
+const pEmail = document.getElementById("pEmail");
+const pPhone = document.getElementById("pPhone");
+const pDept = document.getElementById("pDept");
+const pRole = document.getElementById("pRole");
+const pId = document.getElementById("pId");
+
+/* Approval */
+const requestPermBtn = document.getElementById("requestPermBtn");
+const permStatusText = document.getElementById("permStatusText");
+const approvalTable = document.getElementById("approvalTable");
+
+/* Students */
+const studentTable = document.getElementById("studentTable");
+const studentSearch = document.getElementById("studentSearch");
+
+/* Attendance */
+const attType = document.getElementById("attType");
+const attSearch = document.getElementById("attSearch");
+const attSort = document.getElementById("attSort");
+const downloadExcel = document.getElementById("downloadExcel");
+const attendanceTable = document.getElementById("attendanceTable");
+
+/* Logout */
+const logoutBtn = document.getElementById("logout");
+const logoutConfirm = document.getElementById("logoutConfirm");
+const confirmLogout = document.getElementById("confirmLogout");
+const cancelLogout = document.getElementById("cancelLogout");
+
+/* ========== MENU ========== */
+menuBtn.onclick = () => sidebar.classList.toggle("hidden");
+
+document.querySelectorAll("[data-sec]").forEach(item => {
+  item.onclick = () => show(item.dataset.sec);
 });
 
-function show(id){
-  document.querySelectorAll(".section").forEach(s=>s.classList.add("hidden"));
+function show(id) {
+  sections.forEach(s => s.classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
   sidebar.classList.add("hidden");
 
-  if(id==="approval"){ checkPermission(); loadPending(); }
-  if(id==="students") loadStudents();
-  if(id==="attendance") loadAttendance();
+  if (id === "approval") loadApproval();
+  if (id === "students") loadStudents();
+  if (id === "attendance") loadAttendance();
 }
 
-/* ========= BACK GUARD ========= */
-history.pushState(null,"",location.href);
-window.onpopstate=()=>{
-  logoutConfirm.classList.remove("hidden");
-  history.pushState(null,"",location.href);
-};
+/* ========== AUTH ========== */
+onAuthStateChanged(auth, async user => {
+  if (!user) return location.href = "login.html";
 
-/* ========= AUTH ========= */
-onAuthStateChanged(auth, async user=>{
-  if(!user) location.href="login.html";
-  const snap=await getDoc(doc(db,"users",user.uid));
-  if(!snap.exists()) location.href="login.html";
+  const snap = await getDoc(doc(db, "users", user.uid));
+  me = snap.data();
 
-  me=snap.data();
-  welcome.innerText=`Welcome, ${me.name}`;
-  pName.innerText=me.name;
-  pEmail.innerText=me.email;
-  pPhone.innerText=me.phone||"-";
-  pDept.innerText=me.department||"-";
-  pRole.innerText=me.role;
+  welcome.innerText = `Welcome, ${me.name}`;
+
+  pPhoto.src = me.photoURL;
+  pName.innerText = me.name;
+  pEmail.innerText = me.email;
+  pPhone.innerText = me.phone || "-";
+  pDept.innerText = me.department || "-";
+  pRole.innerText = me.role;
+  pId.innerText = me.staffId || "-";
+
+  checkPermissionStatus();
+  show("home");
 });
 
-/* ========= PERMISSION ========= */
-async function checkPermission(){
-  canApprove=false;
-  requestPerm.disabled=false;
+/* ========== PERMISSION ========== */
+async function checkPermissionStatus() {
+  requestPermBtn.disabled = false;
+  requestPermBtn.classList.remove("disabled");
+  permStatusText.innerText = "";
 
-  const snap=await getDoc(doc(db,"permissionRequests",auth.currentUser.uid));
-  if(!snap.exists()){
-    permStatus.innerText="Admin permission required";
+  if (me.canApproveStudents) {
+    permStatusText.innerText = "✅ Permission granted";
+    requestPermBtn.style.display = "none";
     return;
   }
 
-  const d=snap.data();
-  if(d.status==="pending"){
-    permStatus.innerText="Waiting for admin approval";
-    requestPerm.disabled=true;
+  const reqQ = query(
+    collection(db, "permissionRequests"),
+    where("staffUid", "==", auth.currentUser.uid),
+    where("status", "==", "pending")
+  );
+  const reqSnap = await getDocs(reqQ);
+
+  if (!reqSnap.empty) {
+    permStatusText.innerText = "⏳ Permission request pending";
+    requestPermBtn.disabled = true;
+    requestPermBtn.classList.add("disabled");
     return;
   }
 
-  if(d.expiresAt && Date.now()<d.expiresAt.toMillis()){
-    canApprove=true;
-    permStatus.innerText="Permission active";
-    requestPerm.style.display="none";
-  }else{
-    permStatus.innerText="Permission expired";
+  const users = await getDocs(collection(db, "users"));
+  let hasPending = false;
+
+  users.forEach(d => {
+    const u = d.data();
+    if (u.role === "student" && !u.approved) hasPending = true;
+  });
+
+  if (!hasPending) {
+    permStatusText.innerText = "ℹ️ No students pending for approval";
+    requestPermBtn.disabled = true;
+    requestPermBtn.classList.add("disabled");
   }
 }
 
-requestPerm.onclick=async()=>{
-  await setDoc(doc(db,"permissionRequests",auth.currentUser.uid),{
-    role:"incharge",
-    status:"pending",
-    requestedAt:new Date()
+requestPermBtn.onclick = async () => {
+  if (requestPermBtn.disabled) return alert("No students to approve");
+
+  await addDoc(collection(db, "permissionRequests"), {
+    staffUid: auth.currentUser.uid,
+    staffName: me.name,
+    role: me.role,
+    status: "pending",
+    requestedAt: new Date()
   });
-  toast("Permission request sent");
-  requestPerm.disabled=true;
+
+  alert("Permission request sent");
+  checkPermissionStatus();
 };
 
-/* ========= PENDING ========= */
-async function loadPending(){
-  pending=[];
-  pendingTable.innerHTML="";
-  const snap=await getDocs(collection(db,"users"));
-  snap.forEach(d=>{
-    const u=d.data();
-    if(u.role==="student" && !u.approved && u.inchargeId===auth.currentUser.uid){
-      pending.push({uid:d.id,...u});
+/* ========== APPROVAL ========== */
+async function loadApproval() {
+  approvalTable.innerHTML = "";
+  const snap = await getDocs(collection(db, "users"));
+  let found = false;
+
+  snap.forEach(d => {
+    const u = d.data();
+    if (u.role === "student" && !u.approved) {
+      found = true;
+      approvalTable.innerHTML += `
+      <tr>
+        <td>${u.name}</td>
+        <td>${u.studentId}</td>
+        <td>${u.email}</td>
+        <td>${u.createdAt?.toDate?.() || "-"}</td>
+        <td>
+          <button onclick="approve('${d.id}')">Approve</button>
+          <button onclick="reject('${d.id}')">Reject</button>
+        </td>
+      </tr>`;
     }
   });
-  renderPending();
+
+  if (!found) {
+    approvalTable.innerHTML =
+      `<tr><td colspan="5">No students pending approval</td></tr>`;
+  }
 }
 
-function renderPending(){
-  pendingTable.innerHTML="";
-  let q=searchPending.value.toLowerCase();
-  pending
-    .filter(s=>s.name.toLowerCase().includes(q)||s.studentId.toLowerCase().includes(q))
-    .forEach(s=>{
-      pendingTable.innerHTML+=`
-        <tr>
-          <td>${s.name}</td>
-          <td>${s.studentId}</td>
-          <td>${s.year}</td>
-          <td>${canApprove?`<button data-id="${s.uid}">Approve</button>`:"Permission required"}</td>
-        </tr>`;
-    });
-}
-
-searchPending.onkeyup=renderPending;
-
-pendingTable.onclick=async(e)=>{
-  if(e.target.tagName!=="BUTTON") return;
-  if(!canApprove){ toast("Permission required"); return; }
-  await updateDoc(doc(db,"users",e.target.dataset.id),{approved:true});
-  toast("Student approved");
-  loadPending();
+window.approve = async id => {
+  await updateDoc(doc(db, "users", id), { approved: true });
+  loadApproval();
 };
 
-/* ========= STUDENTS ========= */
-async function loadStudents(){
-  approved=[];
-  studentTable.innerHTML="";
-  const snap=await getDocs(collection(db,"users"));
-  snap.forEach(d=>{
-    const u=d.data();
-    if(u.role==="student" && u.approved && u.inchargeId===auth.currentUser.uid){
-      approved.push({uid:d.id,...u});
-    }
+window.reject = async id => {
+  await updateDoc(doc(db, "users", id), { approved: false });
+  loadApproval();
+};
+
+/* ========== STUDENTS ========== */
+async function loadStudents() {
+  studentsCache = [];
+  studentTable.innerHTML = "";
+
+  const snap = await getDocs(collection(db, "users"));
+  snap.forEach(d => {
+    const u = d.data();
+    if (u.role === "student" && u.approved) studentsCache.push(u);
   });
+
   renderStudents();
 }
 
-function renderStudents(){
-  studentTable.innerHTML="";
-  let q=searchStudent.value.toLowerCase();
-  let y=yearFilter.value;
+function renderStudents() {
+  const key = studentSearch.value.toLowerCase();
+  studentTable.innerHTML = "";
 
-  approved
-    .filter(s=>(!y||s.year==y)&&(s.name.toLowerCase().includes(q)||s.studentId.toLowerCase().includes(q)))
-    .forEach((s,i)=>{
-      studentTable.innerHTML+=`
-        <tr data-index="${i}">
-          <td class="student-name">${s.name}</td>
-          <td>${s.studentId}</td>
-          <td>${s.year}</td>
-        </tr>`;
-    });
+  const list = studentsCache.filter(s =>
+    s.name.toLowerCase().includes(key) ||
+    s.studentId.toLowerCase().includes(key)
+  );
+
+  if (!list.length) {
+    studentTable.innerHTML =
+      `<tr><td colspan="7">No students found</td></tr>`;
+    return;
+  }
+
+  list.forEach(s => {
+    studentTable.innerHTML += `
+    <tr>
+      <td><img src="${s.photoURL}" width="40"></td>
+      <td>${s.name}</td>
+      <td>${s.studentId}</td>
+      <td>${s.email}</td>
+      <td>${s.phone}</td>
+      <td>${s.department}</td>
+      <td>${s.year}</td>
+    </tr>`;
+  });
 }
 
-searchStudent.onkeyup=renderStudents;
-yearFilter.onchange=renderStudents;
+studentSearch.oninput = renderStudents;
 
-/* ========= STUDENT POPUP ========= */
-studentTable.onclick=async(e)=>{
-  const row=e.target.closest("tr");
-  if(!row) return;
-  const s=approved[row.dataset.index];
+/* ========== ATTENDANCE ========== */
+async function loadAttendance() {
+  todayData = [];
+  recordData = [];
+  const today = new Date().toDateString();
 
-  mName.innerText=s.name;
-  mId.innerText=s.studentId;
-  mEmail.innerText=s.email;
-  mPhone.innerText=s.phone||"-";
-  mDept.innerText=s.department;
-  mYear.innerText=s.year;
-
-  studentAttTable.innerHTML="";
-  let total=0,present=0;
-
-  const snap=await getDocs(collection(db,"attendanceRecords"));
-  snap.forEach(d=>{
-    const a=d.data();
-    if(a.studentUid!==s.uid) return;
-    total++; if(a.status==="Present") present++;
-    studentAttTable.innerHTML+=`
-      <tr>
-        <td>${a.date}</td>
-        <td>${a.session}</td>
-        <td>${a.method}</td>
-        <td>${a.gpsVerified?"✔":"✖"}</td>
-        <td>${a.status}</td>
-      </tr>`;
+  const snap = await getDocs(collection(db, "attendanceRecords"));
+  snap.forEach(d => {
+    const a = d.data();
+    const r = {
+      name: a.studentName,
+      id: a.studentId,
+      date: a.date,
+      session: a.session,
+      gps: a.gpsVerified,
+      method: a.method,
+      status: a.status
+    };
+    (new Date(a.date).toDateString() === today ? todayData : recordData).push(r);
   });
 
-  mPercent.innerText=total?Math.round(present/total*100)+"%":"0%";
-  studentModal.classList.remove("hidden");
-};
-
-closeModal.onclick=()=>studentModal.classList.add("hidden");
-
-/* ESC */
-document.addEventListener("keydown",e=>{
-  if(e.key==="Escape"){
-    studentModal.classList.add("hidden");
-    logoutConfirm.classList.add("hidden");
-  }
-});
-
-/* ========= ATTENDANCE ========= */
-async function loadAttendance(){
-  attendance=[];
-  const snap=await getDocs(collection(db,"attendanceRecords"));
-  snap.forEach(d=>{
-    const a=d.data();
-    if(a.inchargeId===auth.currentUser.uid) attendance.push(a);
-  });
   renderAttendance();
 }
 
-function renderAttendance(){
-  attTable.innerHTML="";
-  let q=searchAtt.value.toLowerCase();
-  let data=[...attendance];
+function renderAttendance() {
+  let data = attType.value === "today" ? todayData : recordData;
+  const key = attSearch.value.toLowerCase();
 
-  if(sortAtt.value==="name"){
-    data.sort((a,b)=>a.studentName.localeCompare(b.studentName));
-  }else{
-    data.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  data = data.filter(r =>
+    r.name.toLowerCase().includes(key) ||
+    r.id.toLowerCase().includes(key)
+  );
+
+  activeData = data;
+  attendanceTable.innerHTML = "";
+
+  if (!data.length) {
+    attendanceTable.innerHTML =
+      `<tr><td colspan="8">No data</td></tr>`;
+    return;
   }
 
-  data
-    .filter(a=>a.studentName.toLowerCase().includes(q)||a.studentId.toLowerCase().includes(q))
-    .forEach(a=>{
-      attTable.innerHTML+=`
-        <tr>
-          <td>${a.studentName}</td>
-          <td>${a.studentId}</td>
-          <td>${a.gpsVerified?"✔":"✖"}</td>
-          <td>${a.method==="facial"?"✔":"✖"}</td>
-          <td>${a.method==="manual"?"✔":"✖"}</td>
-          <td>${a.status}</td>
-        </tr>`;
-    });
+  data.forEach(r => {
+    attendanceTable.innerHTML += `
+    <tr>
+      <td>${r.name}</td>
+      <td>${r.id}</td>
+      <td>${r.date}</td>
+      <td>${r.session}</td>
+      <td>${r.gps ? "✔" : "❌"}</td>
+      <td>${r.method === "facial" ? "✔" : "❌"}</td>
+      <td>${r.method === "manual" ? "✔" : "❌"}</td>
+      <td>${r.status === "Present" ? "✔" : "❌"}</td>
+    </tr>`;
+  });
 }
 
-searchAtt.onkeyup=renderAttendance;
-sortAtt.onchange=renderAttendance;
+attType.onchange = renderAttendance;
+attSearch.oninput = renderAttendance;
 
-/* ========= EXCEL ========= */
-downloadExcel.onclick=()=>{
-  let csv="Name,ID,GPS,Facial,Manual,Status\n";
-  attendance.forEach(a=>{
-    csv+=`${a.studentName},${a.studentId},${a.gpsVerified},${a.method==="facial"},${a.method==="manual"},${a.status}\n`;
+/* ========== DOWNLOAD ========== */
+downloadExcel.onclick = () => {
+  if (!activeData.length) return alert("No data");
+
+  let csv = "Name,ID,Date,Session,GPS,Method,Status\n";
+  activeData.forEach(r => {
+    csv += `${r.name},${r.id},${r.date},${r.session},${r.gps},${r.method},${r.status}\n`;
   });
-  const link=document.createElement("a");
-  link.href=URL.createObjectURL(new Blob([csv]));
-  link.download="attendance.xlsx";
-  link.click();
+
+  const blob = new Blob([csv], { type: "application/vnd.ms-excel" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "attendance.xls";
+  a.click();
+};
+
+/* ========== LOGOUT (WORKING) ========== */
+logoutBtn.onclick = () => logoutConfirm.classList.remove("hidden");
+cancelLogout.onclick = () => logoutConfirm.classList.add("hidden");
+confirmLogout.onclick = async () => {
+  await signOut(auth);
+  window.location.replace("login.html");
 };

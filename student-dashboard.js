@@ -1,143 +1,102 @@
 import { auth, db } from "./firebase.js";
+import { onAuthStateChanged, signOut }
+from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import {
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import {
-  doc,
-  getDoc,
-  collection,
-  getDocs,
-  query,
-  where,
-  addDoc
+  doc, getDoc, collection, addDoc, query, where, getDocs
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-/* ================= MENU ================= */
-menuBtn.onclick = () => {
-  sidebar.style.display = sidebar.style.display === "block" ? "none" : "block";
-};
+/* MENU */
+menuBtn.onclick = () => sidebar.classList.toggle("hidden");
+logout.onclick = () => signOut(auth).then(() => location.href = "login.html");
 
-document.querySelectorAll(".sidebar div[data-sec]").forEach(d => {
-  d.onclick = () => show(d.dataset.sec);
-});
-
-logout.onclick = () => {
-  signOut(auth).then(() => location.href = "login.html");
-};
-
-function show(id) {
-  document.querySelectorAll(".section").forEach(s => s.classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-  sidebar.style.display = "none";
-}
-
-/* ================= AUTH ================= */
-let currentUserData = null;
-let uid = null;
+/* AUTH */
+let me = null;
 
 onAuthStateChanged(auth, async user => {
-  if (!user) {
-    location.href = "login.html";
-    return;
-  }
+  if (!user) return location.href = "login.html";
 
-  uid = user.uid;
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (!snap.exists() || snap.data().role !== "student")
+    return location.href = "login.html";
 
-  const snap = await getDoc(doc(db, "users", uid));
-  if (!snap.exists() || snap.data().role !== "student") {
-    location.href = "login.html";
-    return;
-  }
-
-  currentUserData = snap.data();
-  loadProfile(currentUserData);
+  me = snap.data();
+  loadProfile();
   loadAttendance();
 });
 
-/* ================= PROFILE ================= */
-function loadProfile(u) {
-  welcomeText.innerText = `Welcome, ${u.name}`;
-  wish.innerText = `Welcome, ${u.name} 👋`;
+/* PROFILE */
+function loadProfile() {
+  welcomeText.innerText = `Welcome, ${me.name}`;
+  wish.innerText = `Hello ${me.name} 👋`;
 
-  pName.innerText = u.name;
-  pEmail.innerText = u.email;
-  pPhone.innerText = u.phone;
-  pId.innerText = u.studentId;
-  pDept.innerText = u.department;
-  pYear.innerText = u.year;
-  pIncharge.innerText = u.inchargeName || "-";
+  pName.innerText = me.name;
+  pEmail.innerText = me.email;
+  pPhone.innerText = me.phone;
+  pId.innerText = me.studentId;
+  pDept.innerText = me.department;
+  pYear.innerText = me.year;
+  pIncharge.innerText = me.inchargeName || "-";
 }
 
-/* ================= GPS CHECK ================= */
-async function checkGPS() {
-  return new Promise(resolve => {
+/* GPS */
+function checkGPS() {
+  return new Promise(r =>
     navigator.geolocation.getCurrentPosition(
-      pos => resolve(true),
-      () => resolve(false)
-    );
-  });
+      () => r(true),
+      () => r(false)
+    )
+  );
 }
 
-/* ================= MARK ATTENDANCE ================= */
+/* MARK ATTENDANCE */
 facialBtn.onclick = async () => {
-  markMsg.innerText = "";
-  const gps = await checkGPS();
-
-  if (!gps) {
-    gpsStatus.innerText = "GPS Not Verified";
-    return;
-  }
-
-  if (!currentUserData.canMarkAttendance) {
-    permissionStatus.innerText = "Attendance permission not enabled";
-    return;
-  }
+  if (!(await checkGPS())) return gpsStatus.innerText = "GPS failed";
+  if (!me.canMarkAttendance)
+    return permissionStatus.innerText = "Permission required";
 
   await addDoc(collection(db, "attendanceRecords"), {
-    uid,
+    studentUid: auth.currentUser.uid,
+    studentName: me.name,
+    studentId: me.studentId,
+    inchargeId: me.inchargeId,
     date: new Date().toISOString().split("T")[0],
     session: "FN",
-    academicYear: currentUserData.year,
-    month: new Date().getMonth() + 1,
+    academicYear: me.year,
     method: "facial",
     gpsVerified: true,
     status: "Present"
   });
 
-  markMsg.innerText = "Facial attendance marked";
+  markMsg.innerText = "Attendance marked";
 };
 
 manualBtn.onclick = async () => {
-  markMsg.innerText = "";
-  const gps = await checkGPS();
-
-  if (!gps) {
-    gpsStatus.innerText = "GPS Not Verified";
-    return;
-  }
+  if (!(await checkGPS())) return gpsStatus.innerText = "GPS failed";
 
   await addDoc(collection(db, "attendanceRecords"), {
-    uid,
+    studentUid: auth.currentUser.uid,
+    studentName: me.name,
+    studentId: me.studentId,
+    inchargeId: me.inchargeId,
     date: new Date().toISOString().split("T")[0],
     session: "FN",
-    academicYear: currentUserData.year,
-    month: new Date().getMonth() + 1,
+    academicYear: me.year,
     method: "manual",
     gpsVerified: true,
     status: "Pending"
   });
 
-  markMsg.innerText = "Manual attendance request sent";
+  markMsg.innerText = "Manual request sent";
 };
 
-/* ================= HISTORY ================= */
+/* HISTORY */
 async function loadAttendance() {
   attTable.innerHTML = "";
-
-  const snap = await getDocs(
-    query(collection(db, "attendanceRecords"), where("uid", "==", uid))
+  const q = query(
+    collection(db, "attendanceRecords"),
+    where("studentUid", "==", auth.currentUser.uid)
   );
+  const snap = await getDocs(q);
 
   snap.forEach(d => {
     const r = d.data();
@@ -146,11 +105,8 @@ async function loadAttendance() {
         <td>${r.date}</td>
         <td>${r.session}</td>
         <td>${r.method}</td>
-        <td>${r.gpsVerified ? "Verified" : "Not Verified"}</td>
+        <td>${r.gpsVerified ? "✔" : "✖"}</td>
         <td>${r.status}</td>
-      </tr>
-    `;
+      </tr>`;
   });
 }
-
-yearFilter.onchange = monthFilter.onchange = loadAttendance;
