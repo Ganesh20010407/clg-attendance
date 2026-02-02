@@ -3,10 +3,10 @@ import { onAuthStateChanged, signOut }
 from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import {
   collection, getDocs, getDoc, doc,
-  setDoc, updateDoc, deleteDoc
+  updateDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-/* ========== TOAST ========== */
+/* ================= TOAST ================= */
 function showToast(msg, type="success"){
   const c=document.getElementById("toast-container");
   const t=document.createElement("div");
@@ -16,99 +16,66 @@ function showToast(msg, type="success"){
   setTimeout(()=>t.remove(),3000);
 }
 
-/* ========== MENU ========== */
-menuBtn.onclick=()=>sidebar.classList.toggle("hidden");
-logout.onclick=()=>signOut(auth).then(()=>location.href="login.html");
+/* ================= AUTH ================= */
+let records=[];
 
-document.querySelectorAll("[data-sec]").forEach(d =>
-  d.onclick=()=>show(d.dataset.sec)
-);
+onAuthStateChanged(auth, async user=>{
+  if(!user) return location.replace("login.html");
+
+  const snap=await getDoc(doc(db,"users",user.uid));
+  if(!snap.exists()) return location.replace("login.html");
+
+  const me=snap.data();
+  if(!["admin","principal"].includes(me.role))
+    return location.replace("login.html");
+
+  welcome.innerText=`Welcome, ${me.name}`;
+  roleLabel.innerText=me.role.toUpperCase();
+
+  loadApprovals();
+});
+
+/* ================= MENU ================= */
+menuBtn.onclick=()=>sidebar.classList.toggle("hidden");
+
+document.querySelectorAll("[data-sec]").forEach(d=>{
+  d.onclick=()=>show(d.dataset.sec);
+});
 
 function show(id){
   document.querySelectorAll(".section").forEach(s=>s.classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
   sidebar.classList.add("hidden");
 
-  if(id==="staff") loadStaff();
   if(id==="approvals") loadApprovals();
-  if(id==="settings") loadSettings();
+  if(id==="staff") loadIncharge();
   if(id==="attendance") loadAttendance();
 }
 
-/* ========== AUTH ========== */
-let me=null, records=[];
+/* ================= LOGOUT ================= */
+logout.onclick=()=>{
+  if(confirm("Are you sure you want to logout?")){
+    signOut(auth).then(()=>location.replace("login.html"));
+  }
+};
 
-onAuthStateChanged(auth, async user=>{
-  if(!user) return location.href="login.html";
-
-  const snap=await getDoc(doc(db,"users",user.uid));
-  if(!snap.exists()) return location.href="login.html";
-
-  me=snap.data();
-  if(!["admin","principal"].includes(me.role))
-    return location.href="login.html";
-
-  welcome.innerText=`Welcome, ${me.name}`;
-  roleLabel.innerText=me.role.toUpperCase();
-  pName.innerText=me.name;
-  pEmail.innerText=me.email;
-  pRole.innerText=me.role.toUpperCase();
-
-  loadApprovals();
-});
-
-/* ========== STAFF ========== */
-async function loadStaff(){
-  hodTable.innerHTML="";
-  inchargeTable.innerHTML="";
-  const snap=await getDocs(collection(db,"users"));
-
-  snap.forEach(d=>{
-    const u=d.data();
-    if(u.role==="hod"){
-      hodTable.innerHTML+=`
-        <tr><td>${u.name}</td><td>${u.email}</td>
-        <td>${u.approved?"Approved":"Pending"}</td></tr>`;
-    }
-    if(u.role==="incharge"){
-      inchargeTable.innerHTML+=`
-        <tr><td>${u.name}</td><td>${u.email}</td>
-        <td>${u.canApproveStudents?"Granted":"No"}</td></tr>`;
-    }
-  });
-}
-
-/* ========== APPROVALS + 🔔 ========== */
+/* ================= APPROVALS ================= */
 async function loadApprovals(){
   approvalTable.innerHTML="";
   let count=0;
 
-  const users=await getDocs(collection(db,"users"));
-  users.forEach(d=>{
+  const snap=await getDocs(collection(db,"users"));
+  snap.forEach(d=>{
     const u=d.data();
     if(!u.approved){
       count++;
       approvalTable.innerHTML+=`
         <tr>
-          <td>Registration</td>
           <td>${u.name}</td>
           <td>${u.role}</td>
-          <td><button onclick="approveUser('${d.id}')">Approve</button></td>
-        </tr>`;
-    }
-  });
-
-  const perms=await getDocs(collection(db,"permissionRequests"));
-  perms.forEach(d=>{
-    const r=d.data();
-    if(r.status==="pending"){
-      count++;
-      approvalTable.innerHTML+=`
-        <tr>
-          <td>Permission</td>
-          <td>${r.name||"-"}</td>
-          <td>${r.role||"student"}</td>
-          <td><button onclick="approvePerm('${d.id}','${r.uid}')">Approve</button></td>
+          <td>
+            <button onclick="approveUser('${d.id}')">Approve</button>
+          </td>
         </tr>`;
     }
   });
@@ -123,45 +90,68 @@ window.approveUser=async uid=>{
   loadApprovals();
 };
 
-window.approvePerm=async (id,uid)=>{
-  await updateDoc(doc(db,"users",uid),{canMarkAttendance:true});
-  await updateDoc(doc(db,"permissionRequests",id),{status:"approved"});
-  showToast("Permission approved");
-  loadApprovals();
-};
+notifyBtn.onclick=()=>show("approvals");
 
-notifyBell.onclick=()=>show("approvals");
+/* ================= STAFF ================= */
+btnIncharge.onclick=loadIncharge;
+btnHod.onclick=loadHod;
 
-/* ========== SETTINGS ========== */
-async function loadSettings(){
-  const s=await getDoc(doc(db,"settings","attendance"));
-  if(!s.exists()) return;
-  const d=s.data();
-  fnStart.value=d.fnStart||"";
-  fnEnd.value=d.fnEnd||"";
-  anStart.value=d.anStart||"";
-  anEnd.value=d.anEnd||"";
-  lat.value=d.lat||"";
-  lng.value=d.lng||"";
-  radius.value=d.radius||"";
+async function loadIncharge(){
+  staffTable.innerHTML="";
+  const snap=await getDocs(collection(db,"users"));
+  snap.forEach(d=>{
+    const u=d.data();
+    if(u.role==="incharge"){
+      staffTable.innerHTML+=`
+        <tr><td>${u.name}</td><td>${u.email}</td><td>${u.department||"-"}</td></tr>`;
+    }
+  });
+}
+
+async function loadHod(){
+  staffTable.innerHTML="";
+  const snap=await getDocs(collection(db,"users"));
+  snap.forEach(d=>{
+    const u=d.data();
+    if(u.role==="hod"){
+      staffTable.innerHTML+=`
+        <tr><td>${u.name}</td><td>${u.email}</td><td>${u.department||"-"}</td></tr>`;
+    }
+  });
+}
+
+/* ================= SETTINGS ================= */
+btnTiming.onclick=()=>toggle("timingBox");
+btnGps.onclick=()=>toggle("gpsBox");
+btnHoliday.onclick=()=>toggle("holidayBox");
+
+function toggle(id){
+  timingBox.classList.add("hidden");
+  gpsBox.classList.add("hidden");
+  holidayBox.classList.add("hidden");
+  document.getElementById(id).classList.remove("hidden");
 }
 
 saveTiming.onclick=async()=>{
   await setDoc(doc(db,"settings","attendance"),{
-    fnStart:fnStart.value, fnEnd:fnEnd.value,
-    anStart:anStart.value, anEnd:anEnd.value
+    fnStart:fnStart.value,
+    fnEnd:fnEnd.value,
+    anStart:anStart.value,
+    anEnd:anEnd.value
   },{merge:true});
   showToast("Timing saved");
 };
 
 saveGps.onclick=async()=>{
   await setDoc(doc(db,"settings","attendance"),{
-    lat:lat.value, lng:lng.value, radius:radius.value
+    lat:lat.value,
+    lng:lng.value,
+    radius:radius.value
   },{merge:true});
   showToast("GPS saved");
 };
 
-/* ========== ATTENDANCE ========== */
+/* ================= ATTENDANCE ================= */
 async function loadAttendance(){
   records=[];
   const snap=await getDocs(collection(db,"attendanceRecords"));
@@ -171,20 +161,11 @@ async function loadAttendance(){
 
 function renderAttendance(){
   attTable.innerHTML="";
-  const today=new Date().toISOString().split("T")[0];
-  let data=[...records];
-
-  if(attType.value==="today")
-    data=data.filter(r=>r.date===today);
-
   const q=searchAtt.value.toLowerCase();
-  if(q)
-    data=data.filter(r =>
-      (r.studentName||"").toLowerCase().includes(q) ||
-      (r.roll||"").toLowerCase().includes(q)
-    );
-
-  data.forEach(r=>{
+  records.filter(r=>
+    (r.studentName||"").toLowerCase().includes(q) ||
+    (r.roll||"").toLowerCase().includes(q)
+  ).forEach(r=>{
     attTable.innerHTML+=`
       <tr>
         <td>${r.date}</td>
@@ -197,7 +178,6 @@ function renderAttendance(){
   });
 }
 
-attType.onchange=renderAttendance;
 searchAtt.onkeyup=renderAttendance;
 
 downloadAtt.onclick=()=>{
@@ -210,4 +190,10 @@ downloadAtt.onclick=()=>{
   a.download="attendance.csv";
   a.click();
   showToast("Attendance downloaded","info");
+};
+
+/* ================= BACK PROTECTION ================= */
+history.pushState(null,null,location.href);
+window.onpopstate=()=>{
+  signOut(auth).then(()=>location.replace("login.html"));
 };

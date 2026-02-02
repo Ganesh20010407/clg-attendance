@@ -5,15 +5,16 @@
   <title>Admin Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body class="admin-page">
 
 <header class="header">
   <button class="menu-btn" id="menuBtn">☰</button>
   <span>Admin / Principal Dashboard</span>
 
-  <!-- Notification -->
-  <div id="notifyBell" class="notify">
-    🔔 <span id="notifyCount" class="badge hidden">0</span>
+  <div style="margin-left:auto;cursor:pointer;position:relative">
+    <span id="notifyBtn">🔔</span>
+    <span id="notifyCount" class="hidden">0</span>
   </div>
 </header>
 
@@ -22,11 +23,10 @@
   <!-- SIDEBAR -->
   <nav class="sidebar hidden" id="sidebar">
     <div data-sec="home">Home</div>
-    <div data-sec="profile">Profile</div>
-    <div data-sec="staff">Staff Management</div>
     <div data-sec="approvals">Approvals</div>
-    <div data-sec="settings">Settings</div>
+    <div data-sec="staff">Staff Management</div>
     <div data-sec="attendance">Attendance</div>
+    <div data-sec="settings">Settings</div>
     <div id="logout">Logout</div>
   </nav>
 
@@ -39,40 +39,12 @@
       <p class="center">Role: <b id="roleLabel"></b></p>
     </section>
 
-    <!-- PROFILE -->
-    <section id="profile" class="section hidden">
-      <div class="profile-card">
-        <img src="profile.png" class="profile-img">
-        <h3 id="pName"></h3>
-        <p>Email: <span id="pEmail"></span></p>
-        <p>Role: <span id="pRole"></span></p>
-      </div>
-    </section>
-
-    <!-- STAFF -->
-    <section id="staff" class="section hidden">
-      <h3>Staff Management</h3>
-
-      <h4>HODs</h4>
-      <table>
-        <thead><tr><th>Name</th><th>Email</th><th>Status</th></tr></thead>
-        <tbody id="hodTable"></tbody>
-      </table>
-
-      <h4 style="margin-top:20px;">Incharges</h4>
-      <table>
-        <thead><tr><th>Name</th><th>Email</th><th>Permission</th></tr></thead>
-        <tbody id="inchargeTable"></tbody>
-      </table>
-    </section>
-
     <!-- APPROVALS -->
     <section id="approvals" class="section hidden">
       <h3>Pending Approvals</h3>
       <table>
         <thead>
           <tr>
-            <th>Type</th>
             <th>Name</th>
             <th>Role</th>
             <th>Action</th>
@@ -82,53 +54,28 @@
       </table>
     </section>
 
-    <!-- SETTINGS -->
-    <section id="settings" class="section hidden">
-      <h3>System Settings</h3>
-
-      <div class="settings-grid">
-
-        <div class="settings-card">
-          <h4>⏰ Attendance Timing</h4>
-          <input type="time" id="fnStart">
-          <input type="time" id="fnEnd">
-          <input type="time" id="anStart">
-          <input type="time" id="anEnd">
-          <button id="saveTiming">Save Timing</button>
-        </div>
-
-        <div class="settings-card">
-          <h4>📍 GPS Settings</h4>
-          <input id="lat" placeholder="Latitude">
-          <input id="lng" placeholder="Longitude">
-          <input id="radius" placeholder="Radius (m)">
-          <button id="saveGps">Save GPS</button>
-        </div>
-
-        <div class="settings-card">
-          <h4>📅 Holidays</h4>
-          <input type="date" id="holidayDate">
-          <input id="holidayReason" placeholder="Reason">
-          <button id="addHoliday">Add Holiday</button>
-
-          <table>
-            <thead><tr><th>Date</th><th>Reason</th><th></th></tr></thead>
-            <tbody id="holidayTable"></tbody>
-          </table>
-        </div>
-
+    <!-- STAFF -->
+    <section id="staff" class="section hidden">
+      <div class="controls">
+        <button id="btnIncharge">Incharge</button>
+        <button id="btnHod">HOD</button>
       </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+          </tr>
+        </thead>
+        <tbody id="staffTable"></tbody>
+      </table>
     </section>
 
     <!-- ATTENDANCE -->
     <section id="attendance" class="section hidden">
-      <h3>Attendance Records</h3>
-
       <div class="controls">
-        <select id="attType">
-          <option value="today">Today</option>
-          <option value="records">All</option>
-        </select>
         <input id="searchAtt" placeholder="Search name / roll">
         <button id="downloadAtt">Download CSV</button>
       </div>
@@ -136,18 +83,56 @@
       <table>
         <thead>
           <tr>
-            <th>Date</th><th>Name</th><th>Roll</th>
-            <th>Year</th><th>Session</th><th>Status</th>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Roll</th>
+            <th>Year</th>
+            <th>Session</th>
+            <th>Status</th>
           </tr>
         </thead>
         <tbody id="attTable"></tbody>
       </table>
     </section>
 
+    <!-- SETTINGS -->
+    <section id="settings" class="section hidden">
+
+      <div class="controls">
+        <button id="btnTiming">Timing</button>
+        <button id="btnGps">GPS</button>
+        <button id="btnHoliday">Holidays</button>
+      </div>
+
+      <!-- TIMING -->
+      <div id="timingBox" class="hidden">
+        <input type="time" id="fnStart">
+        <input type="time" id="fnEnd">
+        <input type="time" id="anStart">
+        <input type="time" id="anEnd">
+        <button id="saveTiming">Save Timing</button>
+      </div>
+
+      <!-- GPS -->
+      <div id="gpsBox" class="hidden">
+        <input id="lat" placeholder="Latitude">
+        <input id="lng" placeholder="Longitude">
+        <input id="radius" placeholder="Radius (meters)">
+        <button id="saveGps">Save GPS</button>
+      </div>
+
+      <!-- HOLIDAYS -->
+      <div id="holidayBox" class="hidden">
+        <input type="date" id="holidayDate">
+        <input id="holidayReason" placeholder="Reason">
+        <button id="addHoliday">Add Holiday</button>
+      </div>
+
+    </section>
+
   </main>
 </div>
 
-<!-- Toast container -->
 <div id="toast-container"></div>
 
 <script type="module" src="admin-dashboard.js"></script>
