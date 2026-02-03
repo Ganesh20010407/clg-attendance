@@ -3,85 +3,78 @@
 <head>
   <title>Register</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    .hidden { display:none; }
-    header {
-      background:#333;
-      color:#fff;
-      padding:15px;
-      text-align:center;
-    }
-  </style>
 </head>
-<body class="auth-page">
-
-<header>
-  <h2 id="who">Registering</h2>
-</header>
+<body>
 
 <div class="container">
 
-  <!-- COMMON -->
-  <input id="name" placeholder="Full Name">
-  <input id="email" placeholder="Email">
-  <input id="phone" placeholder="Phone">
-  <input id="password" type="password" placeholder="Password">
+  <div class="role-badge" id="roleBadge"></div>
 
-  <!-- PROFILE PIC -->
-  <label>Profile Photo</label>
-  <input id="photo" type="file" accept="image/*">
+  <!-- STEP 1 -->
+  <div id="step1">
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
 
-  <!-- STUDENT -->
-  <div id="student" class="hidden">
-    <input id="studentId" placeholder="Student ID">
-    <select id="studentDept">
-      <option value="">Department</option>
-      <option>CSE</option><option>CSD</option><option>CSM</option>
-      <option>ECE</option><option>MECH</option>
-      <option>CIVIL</option><option>EEE</option>
-    </select>
-    <select id="year">
-      <option value="">Year</option>
-      <option>1</option><option>2</option>
-      <option>3</option><option>4</option>
-    </select>
-    <select id="inchargeId">
-      <option value="">Select Incharge</option>
-    </select>
+    <button id="registerBtn">Register & Verify</button>
+    <p id="msg"></p>
+
+    <button id="continueBtn" class="hidden">Continue</button>
   </div>
 
-  <!-- INCHARGE -->
-  <div id="incharge" class="hidden">
-    <input id="staffIdIncharge" placeholder="Staff ID">
-    <select id="deptIncharge">
-      <option value="">Department</option>
-      <option>CSE</option><option>CSD</option><option>CSM</option>
-      <option>ECE</option><option>MECH</option>
-      <option>CIVIL</option><option>EEE</option>
-    </select>
-    <select id="hodId">
-      <option value="">Select HOD</option>
-    </select>
+  <!-- STEP 2 -->
+  <div id="step2" class="hidden">
+
+    <input type="file" id="photo" accept="image/*">
+    <img id="preview">
+
+    <input id="name" placeholder="Full Name">
+    <small id="nameErr">Required</small>
+
+    <input id="phone" placeholder="Phone (10 digits)" maxlength="10">
+    <small id="phoneErr">Invalid phone</small>
+
+    <!-- STUDENT -->
+    <div id="studentFields" class="hidden">
+      <input id="studentId" placeholder="Student ID">
+      <select id="studentDept">
+        <option value="" disabled selected>Department</option>
+        <option>CSE</option><option>CSD</option><option>CSM</option>
+        <option>ECE</option><option>MECH</option>
+        <option>CIVIL</option><option>EEE</option>
+      </select>
+      <select id="year">
+        <option value="" disabled selected>Year</option>
+        <option>1</option><option>2</option>
+        <option>3</option><option>4</option>
+      </select>
+      <select id="inchargeId">
+        <option value="" disabled selected>Incharge</option>
+      </select>
+    </div>
+
+    <!-- INCHARGE / HOD -->
+    <div id="staffFields" class="hidden">
+      <input id="staffId" placeholder="Staff ID">
+      <select id="staffDept">
+        <option value="" disabled selected>Department</option>
+        <option>CSE</option><option>CSD</option><option>CSM</option>
+        <option>ECE</option><option>MECH</option>
+        <option>CIVIL</option><option>EEE</option>
+      </select>
+      <select id="hodId">
+        <option value="" disabled selected>HOD (optional)</option>
+      </select>
+    </div>
+
+    <!-- ADMIN / PRINCIPAL -->
+    <div id="adminFields" class="hidden">
+      <input id="adminStaffId" placeholder="Staff ID">
+      <input id="inviteCode" placeholder="Invite Code">
+    </div>
+
+    <button id="submitBtn" disabled>Submit</button>
   </div>
 
-  <!-- HOD -->
-  <div id="hod" class="hidden">
-    <input id="staffIdHod" placeholder="Staff ID">
-    <select id="deptHod">
-      <option value="">Department</option>
-      <option>CSE</option><option>CSD</option><option>CSM</option>
-      <option>ECE</option><option>MECH</option>
-      <option>CIVIL</option><option>EEE</option>
-    </select>
-  </div>
-
-  <!-- ADMIN / PRINCIPAL -->
-  <div id="authority" class="hidden">
-    <input id="staffIdAuth" placeholder="Staff ID">
-    <input id="invite" placeholder="Invite Code">
-  </div>
-
-  <button id="registerBtn">Register</button>
 </div>
 
 <script type="module" src="register.js"></script>
