@@ -1,29 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Student Dashboard</title>
 
 <link rel="stylesheet" href="student-dashboard.css">
 
+<!-- FACE API -->
 <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
-
-<script type="module" src="student-dashboard.js"></script>
 
 </head>
 <body>
 
+<!-- HEADER -->
 <header class="header">
 
+<div class="header-left">
 <button id="menuBtn">☰</button>
+<span>College Attendance System</span>
+</div>
 
 <div class="header-center">
-<span id="studentName"></span>
+<span id="studentName">Loading...</span>
 </div>
 
 <div class="header-right">
 
-<span id="bell">🔔</span>
+<div class="bell" id="bellBtn">
+🔔
+<span id="bellCount" class="hidden">0</span>
+</div>
 
 <button id="logoutBtn">Logout</button>
 
@@ -32,108 +38,104 @@
 </header>
 
 
+<!-- LAYOUT -->
 <div class="layout">
 
-<nav class="sidebar hidden" id="sidebar">
+<!-- SIDEBAR -->
+<nav id="sidebar" class="sidebar hidden">
 
-<div data-sec="home">Home</div>
-<div data-sec="profile">Profile</div>
-<div data-sec="mark">Mark Attendance</div>
-<div data-sec="records">Attendance Record</div>
+<div data-page="home">Home</div>
+<div data-page="attendance">Mark Attendance</div>
+<div data-page="records">Attendance Record</div>
 
 </nav>
 
 
+<!-- CONTENT -->
 <main class="content">
 
 <!-- HOME -->
+<section id="homePage" class="page active">
 
-<section id="home" class="section active">
+<h2 id="wishText"></h2>
 
-<h2 id="wish"></h2>
+<div class="cards">
 
-<div class="todayBox">
-
-<h3>Today Attendance</h3>
-
-<div>
-FN: <span id="todayFN">○</span>
+<div class="card">
+FN
+<div id="fnStatus">—</div>
 </div>
 
-<div>
-AN: <span id="todayAN">○</span>
+<div class="card">
+AN
+<div id="anStatus">—</div>
 </div>
 
-<div>
-Status: <span id="todayStatus">Not Marked</span>
+<div class="card">
+Present
+<div id="presentCount">0</div>
+</div>
+
+<div class="card">
+Absent
+<div id="absentCount">0</div>
 </div>
 
 </div>
-
-<div class="stats">
-
-<div>Total Days: <span id="totalDays">0</span></div>
-<div>Present Days: <span id="presentDays">0</span></div>
-<div>Absent Days: <span id="absentDays">0</span></div>
-<div>Attendance %: <span id="percent">0</span></div>
-
-</div>
-
-</section>
-
-
-<!-- PROFILE -->
-
-<section id="profile" class="section">
-
-<img id="profilePic" class="profilePic">
-
-<div id="profileInfo"></div>
 
 </section>
 
 
 <!-- MARK ATTENDANCE -->
+<section id="attendancePage" class="page">
 
-<section id="mark" class="section">
+<div class="attendance-box">
 
-<div class="centerBox">
+<h2>Mark Attendance</h2>
 
-<div id="gpsStatus">GPS: waiting</div>
+<div id="sessionText"></div>
 
-<div id="faceStatus">Face: waiting</div>
+<button id="markBtn">Mark Attendance</button>
 
-<video id="video" autoplay muted></video>
+<!-- PROGRESS -->
+<div class="progress">
 
-<button id="startBtn">Start Attendance</button>
+<div id="gpsStep" class="step gray">GPS</div>
 
-<button id="captureBtn">Capture Face</button>
+<div id="faceStep" class="step gray hidden">Facial</div>
 
-<button id="manualBtn" class="hidden">
-Request Manual Attendance
-</button>
+<div id="manualStep" class="step gray hidden">Manual</div>
+
+</div>
+
+<!-- CAMERA -->
+<video id="video" autoplay muted class="hidden"></video>
+
+<button id="captureBtn" class="hidden">Capture Face</button>
+
+<div id="statusText"></div>
 
 </div>
 
 </section>
 
 
-<!-- RECORDS -->
+<!-- RECORD -->
+<section id="recordsPage" class="page">
 
-<section id="records" class="section">
+<h2>Attendance Record</h2>
 
 <table>
 
 <thead>
-
 <tr>
 <th>Date</th>
-<th>FN</th>
-<th>AN</th>
+<th>Session</th>
+<th>GPS</th>
+<th>Facial</th>
+<th>Manual</th>
 <th>Status</th>
-<th>Method</th>
 </tr>
-
 </thead>
 
 <tbody id="recordTable"></tbody>
@@ -142,27 +144,27 @@ Request Manual Attendance
 
 </section>
 
-
 </main>
 
 </div>
 
 
 <!-- LOGOUT MODAL -->
-
 <div id="logoutModal" class="modal hidden">
 
-<div class="modalBox">
+<div class="modal-box">
 
 <h3>Confirm Logout?</h3>
 
 <button id="confirmLogout">Yes</button>
-
 <button id="cancelLogout">Cancel</button>
 
 </div>
 
 </div>
+
+
+<script type="module" src="student-dashboard.js"></script>
 
 </body>
 </html>
