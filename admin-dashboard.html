@@ -1,140 +1,272 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Admin / Principal Dashboard</title>
+<link rel="stylesheet" href="style.css">
 </head>
-
-<body class="admin-page">
+<body>
 
 <header class="header">
-  <button class="menu-btn" id="menuBtn">☰</button>
-  <span>Admin / Principal Dashboard</span>
 
-  <div style="margin-left:auto;cursor:pointer;position:relative">
-    <span id="notifyBtn">🔔</span>
-    <span id="notifyCount" class="hidden">0</span>
-  </div>
+<div class="header-left">
+<button id="menuBtn">☰</button>
+<span class="system-name">College Attendance System</span>
+</div>
+
+<div class="header-center">
+<span id="userDisplay"></span>
+</div>
+
+<div class="header-right">
+
+<span id="notifyBtn" class="notify">
+🔔 <span id="notifyCount" class="count hidden">0</span>
+</span>
+
+<button id="logoutBtn">Logout</button>
+
+</div>
+
 </header>
+
 
 <div class="layout">
 
-  <!-- SIDEBAR -->
-  <nav class="sidebar hidden" id="sidebar">
-    <div data-sec="home">Home</div>
-    <div data-sec="approvals">Approvals</div>
-    <div data-sec="staff">Staff Management</div>
-    <div data-sec="attendance">Attendance</div>
-    <div data-sec="settings">Settings</div>
-    <div id="logout">Logout</div>
-  </nav>
+<nav id="sidebar" class="sidebar hidden">
 
-  <!-- CONTENT -->
-  <main class="content">
+<div data-sec="home">Home</div>
 
-    <!-- HOME -->
-    <section id="home" class="section">
-      <h2 id="welcome" class="center"></h2>
-      <p class="center">Role: <b id="roleLabel"></b></p>
-    </section>
+<div data-sec="approvals">Approvals</div>
 
-    <!-- APPROVALS -->
-    <section id="approvals" class="section hidden">
-      <h3>Pending Approvals</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Role</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="approvalTable"></tbody>
-      </table>
-    </section>
+<div data-sec="staff">Staff Management</div>
 
-    <!-- STAFF -->
-    <section id="staff" class="section hidden">
-      <div class="controls">
-        <button id="btnIncharge">Incharge</button>
-        <button id="btnHod">HOD</button>
-      </div>
+<div data-sec="attendance">Attendance</div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Department</th>
-          </tr>
-        </thead>
-        <tbody id="staffTable"></tbody>
-      </table>
-    </section>
+<div id="settingsToggle">Settings ▼</div>
 
-    <!-- ATTENDANCE -->
-    <section id="attendance" class="section hidden">
-      <div class="controls">
-        <input id="searchAtt" placeholder="Search name / roll">
-        <button id="downloadAtt">Download CSV</button>
-      </div>
+<div id="settingsSubmenu" class="submenu hidden">
 
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Name</th>
-            <th>Roll</th>
-            <th>Year</th>
-            <th>Session</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="attTable"></tbody>
-      </table>
-    </section>
+<div data-sec="timing">Attendance Timing</div>
 
-    <!-- SETTINGS -->
-    <section id="settings" class="section hidden">
+<div data-sec="gps">GPS Settings</div>
 
-      <div class="controls">
-        <button id="btnTiming">Timing</button>
-        <button id="btnGps">GPS</button>
-        <button id="btnHoliday">Holidays</button>
-      </div>
+<div data-sec="holiday">Holiday Declaration</div>
 
-      <!-- TIMING -->
-      <div id="timingBox" class="hidden">
-        <input type="time" id="fnStart">
-        <input type="time" id="fnEnd">
-        <input type="time" id="anStart">
-        <input type="time" id="anEnd">
-        <button id="saveTiming">Save Timing</button>
-      </div>
-
-      <!-- GPS -->
-      <div id="gpsBox" class="hidden">
-        <input id="lat" placeholder="Latitude">
-        <input id="lng" placeholder="Longitude">
-        <input id="radius" placeholder="Radius (meters)">
-        <button id="saveGps">Save GPS</button>
-      </div>
-
-      <!-- HOLIDAYS -->
-      <div id="holidayBox" class="hidden">
-        <input type="date" id="holidayDate">
-        <input id="holidayReason" placeholder="Reason">
-        <button id="addHoliday">Add Holiday</button>
-      </div>
-
-    </section>
-
-  </main>
 </div>
 
-<div id="toast-container"></div>
+</nav>
+
+
+<main class="content">
+
+
+<!-- HOME -->
+
+<section id="home" class="section active">
+
+<h2 id="welcome"></h2>
+
+<div class="dash-grid">
+
+<div class="card">Students<h3 id="totalStudents">0</h3></div>
+<div class="card">Incharge<h3 id="totalIncharge">0</h3></div>
+<div class="card">HOD<h3 id="totalHod">0</h3></div>
+<div class="card">Pending<h3 id="pendingCount">0</h3></div>
+<div class="card">Present<h3 id="presentCount">0</h3></div>
+<div class="card">Absent<h3 id="absentCount">0</h3></div>
+
+</div>
+
+</section>
+
+
+<!-- APPROVALS -->
+
+<section id="approvals" class="section">
+
+<h2>Approvals</h2>
+
+<button id="approveSelected">Approve Selected</button>
+<button id="rejectSelected">Reject Selected</button>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th><input type="checkbox" id="selectAll"></th>
+<th>S.No</th>
+<th>Name</th>
+<th>Email</th>
+<th>Role</th>
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+<tbody id="approvalTable"></tbody>
+
+</table>
+
+</section>
+
+
+<!-- STAFF -->
+
+<section id="staff" class="section">
+
+<h2>Staff Management</h2>
+
+<input id="staffSearch" placeholder="Search Staff">
+
+<button onclick="loadStaff('all')">All</button>
+<button onclick="loadStaff('hod')">HOD</button>
+<button onclick="loadStaff('incharge')">Incharge</button>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>S.No</th>
+<th>Name</th>
+<th>Email</th>
+<th>Department</th>
+
+</tr>
+
+</thead>
+
+<tbody id="staffTable"></tbody>
+
+</table>
+
+</section>
+
+
+<!-- DETAILS -->
+
+<section id="detailsSection" class="section">
+
+<button onclick="goBack()">← Back</button>
+
+<h2 id="detailsTitle"></h2>
+
+<div id="detailsInfo"></div>
+
+<input id="detailsSearch" placeholder="Search">
+
+<table>
+
+<thead id="detailsHead"></thead>
+
+<tbody id="detailsBody"></tbody>
+
+</table>
+
+</section>
+
+
+<!-- ATTENDANCE -->
+
+<section id="attendance" class="section">
+
+<h2>Attendance</h2>
+
+<input id="attendanceSearch" placeholder="Search">
+
+<select id="yearFilter">
+
+<option value="all">All</option>
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+
+</select>
+
+<button id="downloadCSV">Download CSV</button>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>S.No</th>
+<th>Name</th>
+<th>Date</th>
+<th>Roll</th>
+<th>Year</th>
+<th>Session</th>
+<th>GPS</th>
+<th>Face</th>
+<th>Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="attTable"></tbody>
+
+</table>
+
+</section>
+
+
+<!-- TIMING -->
+
+<section id="timing" class="section">
+
+<h2>Attendance Timing</h2>
+
+<input type="time" id="fnStart">
+<input type="time" id="fnEnd">
+<input type="time" id="anStart">
+<input type="time" id="anEnd">
+
+<button id="saveTiming">Save</button>
+
+</section>
+
+
+<!-- GPS -->
+
+<section id="gps" class="section">
+
+<h2>GPS Settings</h2>
+
+<input id="lat" placeholder="Latitude">
+<input id="lng" placeholder="Longitude">
+<input id="radius" placeholder="Radius">
+
+<button id="saveGPS">Save</button>
+
+</section>
+
+
+<!-- HOLIDAY -->
+
+<section id="holiday" class="section">
+
+<h2>Holiday</h2>
+
+<input type="date" id="holidayDate">
+<input id="holidayReason" placeholder="Reason">
+
+<button id="addHoliday">Add</button>
+
+</section>
+
+
+</main>
+</div>
 
 <script type="module" src="admin-dashboard.js"></script>
+
 </body>
 </html>

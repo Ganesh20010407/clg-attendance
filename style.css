@@ -1,481 +1,439 @@
 /* ================================================= */
-/* ===================== RESET ===================== */
-/* ================================================= */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-/* ================================================= */
-/* ===================== BODY ====================== */
-/* ================================================= */
-body {
-  background: #f0f0f0;
-  color: #333;
-}
-
-/* ================================================= */
-/* ===================== HEADER ==================== */
-/* ================================================= */
-.header {
-  height: 55px;
-  background: #333;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  padding: 0 15px;
-  gap: 15px;
-}
-
-.menu-btn,
-.header button {
-  font-size: 22px;
-  background: none;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-}
-
-/* ================================================= */
-/* ===================== LAYOUT ==================== */
-/* ================================================= */
-.layout {
-  display: flex;
-  min-height: calc(100vh - 55px);
-}
-
-/* ================================================= */
-/* ===================== SIDEBAR =================== */
-/* ================================================= */
-.sidebar {
-  width: 220px;
-  background: #222;
-  color: #fff;
-  padding-top: 10px;
-}
-
-.sidebar div {
-  padding: 12px 16px;
-  cursor: pointer;
-}
-
-.sidebar div:hover {
-  background: #444;
-}
-
-/* ================================================= */
-/* ===================== CONTENT =================== */
-/* ================================================= */
-.content {
-  flex: 1;
-  text-align: center;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-/* ================================================= */
-/* ===================== SECTIONS ================== */
-/* ================================================= */
-.section {
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-}
-
-.hidden {
-  display: none;
-}
-
-.center {
-  text-align: center;
-}
-
-/* ================================================= */
-/* ===================== TABLES ==================== */
-/* ================================================= */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-th, td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: center;
-}
-
-th {
-  background: #333;
-  color: #fff;
-}
-
-/* ================================================= */
-/* ===================== CONTROLS ================== */
-/* ================================================= */
-.controls {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
-}
-
-input,
-select,
-button {
-  padding: 6px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-
-/* ================================================= */
-/* ===================== BUTTONS =================== */
-/* ================================================= */
-button {
-  background: #333;
-  color: #fff;
-  cursor: pointer;
-  border: none;
-}
-
-button:hover {
-  background: #000;
-}
-
-/* ================================================= */
-/* ===================== PROFILE =================== */
-/* ================================================= */
-.profile-card {
-  max-width: 420px;
-  margin: 40px auto;
-  padding: 25px;
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-  text-align: center;
-}
-
-.profile-img {
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-bottom: 15px;
-  border: 3px solid #333;
-}
-
-/* ================================================= */
-/* ===================== AUTH PAGES ================ */
-/* ================================================= */
-.auth-page {
-  background: linear-gradient(135deg, #ececec, #dcdcdc);
-}
-
-.container {
-  width: 360px;
-  background: #fff;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  margin: 120px auto;
-}
-
-.container h2 {
-  text-align: center;
-  margin-bottom: 15px;
-}
-
-.container input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: 5px;
-}
-
-.container button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 15px;
-  font-size: 15px;
-}
-
-#status {
-  margin-top: 10px;
-  text-align: center;
-  font-size: 14px;
-}
-
-/* ================================================= */
-/* ===================== MODAL ===================== */
-/* ================================================= */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-card {
-  background: #fff;
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: 20px;
-  border-radius: 12px;
-  position: relative;
-}
-
-.close-btn {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  border: none;
-  background: none;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-/* ================================================= */
-/* ===================== TOAST ===================== */
-/* ================================================= */
-#toast-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 2000;
-}
-
-.toast {
-  background: #333;
-  color: #fff;
-  padding: 14px 20px;
-  margin-top: 10px;
-  border-radius: 8px;
-  font-size: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-}
-
-.toast.success { background: #16a34a; }
-.toast.error   { background: #dc2626; }
-.toast.info    { background: #2563eb; }
-
-/* ================================================= */
-/* ============ LOGOUT CONFIRM OVERLAY ============= */
-/* ================================================= */
-.logout-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(6px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 3000;
-}
-
-.logout-overlay.active {
-  display: flex;
-}
-
-.logout-modal {
-  background: #fff;
-  padding: 30px;
-  width: 90%;
-  max-width: 360px;
-  border-radius: 14px;
-  text-align: center;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-}
-
-.logout-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.logout-actions .danger {
-  background: #c62828;
-}
-
-.logout-actions .secondary {
-  background: #e0e0e0;
-  color: #000;
-}
-
-/* ================================================= */
-/* ===================== LINKS ===================== */
-/* ================================================= */
-.link {
-  color: #0066cc;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-/* ================================================= */
-/* ===================== button disable============= */
+/* RESET */
 /* ================================================= */
 
-button.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI, Arial, sans-serif;
+}
+
+body{
+background:#f5f5f7;
+color:#333;
 }
 
 
 /* ================================================= */
-/* ===================== registration============= */
+/* HEADER */
 /* ================================================= */
 
-/* ================= ROOT COLORS ================= */
-:root {
-  --primary: #6a5af9;
-  --secondary: #f857a6;
-  --accent: #43cea2;
-  --dark: #2b2b2b;
-  --light: #f5f7fb;
-  --danger: #ff4d4d;
+.header{
+
+height:60px;
+
+background:#ffffff;
+
+border-bottom:1px solid #ddd;
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+padding:0 20px;
+
+position:relative;
+
 }
 
-/* ================= GLOBAL ================= */
-* {
-  box-sizing: border-box;
-  font-family: "Segoe UI", sans-serif;
+
+/* LEFT */
+
+.header-left{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
 }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.system-name{
+
+font-weight:600;
+
 }
 
-/* ================= CONTAINER ================= */
-.container {
-  background: white;
-  width: 420px;
-  padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-  animation: fadeIn 0.6s ease;
+
+/* CENTER */
+
+.header-center{
+
+position:absolute;
+
+left:50%;
+
+transform:translateX(-50%);
+
+font-weight:600;
+
 }
 
-/* ================= HEADINGS ================= */
-.container h2 {
-  text-align: center;
-  margin-bottom: 20px;
-  color: var(--dark);
+
+/* RIGHT */
+
+.header-right{
+
+display:flex;
+
+align-items:center;
+
+gap:20px;
+
 }
 
-/* ================= INPUTS ================= */
-input, select {
-  width: 100%;
-  padding: 12px;
-  margin-top: 14px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  font-size: 14px;
-  background: var(--light);
-  transition: 0.3s;
+
+/* NOTIFICATION */
+
+.notify{
+
+cursor:pointer;
+
+position:relative;
+
+font-size:18px;
+
 }
 
-input:focus, select:focus {
-  outline: none;
-  border-color: var(--primary);
-  background: white;
-  box-shadow: 0 0 0 2px rgba(106,90,249,0.15);
+.count{
+
+position:absolute;
+
+top:-6px;
+
+right:-10px;
+
+background:red;
+
+color:white;
+
+font-size:11px;
+
+padding:2px 6px;
+
+border-radius:10px;
+
 }
 
-/* ================= FILE INPUT ================= */
-input[type="file"] {
-  background: none;
-  border: none;
-  padding: 0;
+.hidden{
+display:none;
 }
 
-/* ================= IMAGE PREVIEW ================= */
-#preview {
-  display: none;
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin: 10px auto;
-  border: 3px solid var(--primary);
+
+/* LOGOUT */
+
+#logoutBtn{
+
+padding:6px 14px;
+
+background:#0071e3;
+
+color:white;
+
+border:none;
+
+border-radius:6px;
+
+cursor:pointer;
+
 }
 
-/* ================= BUTTONS ================= */
-button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 18px;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
-  color: white;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  transition: 0.3s;
+#logoutBtn:hover{
+
+background:#005bb5;
+
 }
 
-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(106,90,249,0.3);
+
+/* MENU */
+
+#menuBtn{
+
+background:none;
+
+border:none;
+
+font-size:20px;
+
+cursor:pointer;
+
 }
 
-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  box-shadow: none;
+
+/* ================================================= */
+/* LAYOUT */
+/* ================================================= */
+
+.layout{
+
+display:flex;
+
+min-height:calc(100vh - 60px);
+
 }
 
-/* ================= CONTINUE BUTTON ================= */
-#continueBtn {
-  background: linear-gradient(135deg, var(--accent), #2ebf91);
+
+/* ================================================= */
+/* SIDEBAR */
+/* ================================================= */
+
+.sidebar{
+
+width:220px;
+
+background:white;
+
+border-right:1px solid #ddd;
+
+padding-top:10px;
+
 }
 
-/* ================= ERROR TEXT ================= */
-small {
-  display: none;
-  color: var(--danger);
-  font-size: 12px;
-  margin-top: 4px;
+.sidebar div{
+
+padding:14px;
+
+cursor:pointer;
+
 }
 
-/* ================= ROLE TAG ================= */
-.role-badge {
-  text-align: center;
-  margin-bottom: 10px;
-  padding: 6px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: bold;
-  color: white;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+.sidebar div:hover{
+
+background:#f0f0f0;
+
 }
 
-/* ================= HIDDEN ================= */
-.hidden {
-  display: none;
+
+/* SETTINGS SUBMENU */
+
+.submenu{
+
+padding-left:15px;
+
+background:#fafafa;
+
 }
 
-/* ================= ANIMATIONS ================= */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.submenu div{
+
+padding:10px;
+
+font-size:14px;
+
 }
+
+
+/* ================================================= */
+/* CONTENT */
+/* ================================================= */
+
+.content{
+
+flex:1;
+
+padding:20px;
+
+}
+
+
+/* ================================================= */
+/* SECTION CONTROL */
+/* ================================================= */
+
+.section{
+
+display:none;
+
+}
+
+.section.active{
+
+display:block;
+
+}
+
+
+/* ================================================= */
+/* WELCOME */
+/* ================================================= */
+
+#welcome{
+
+margin-bottom:20px;
+
+font-size:20px;
+
+}
+
+
+/* ================================================= */
+/* DASHBOARD CARDS */
+/* ================================================= */
+
+.dash-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+
+gap:15px;
+
+}
+
+.card{
+
+background:white;
+
+padding:20px;
+
+border-radius:10px;
+
+border:1px solid #ddd;
+
+text-align:center;
+
+}
+
+.card h3{
+
+margin-top:10px;
+
+font-size:22px;
+
+}
+
+
+/* ================================================= */
+/* TABLE */
+/* ================================================= */
+
+table{
+
+width:100%;
+
+border-collapse:collapse;
+
+margin-top:15px;
+
+background:white;
+
+}
+
+th,td{
+
+border:1px solid #ddd;
+
+padding:10px;
+
+text-align:center;
+
+}
+
+th{
+
+background:#f0f0f0;
+
+}
+
+
+/* ================================================= */
+/* BUTTON */
+/* ================================================= */
+
+button{
+
+padding:6px 12px;
+
+border:none;
+
+border-radius:6px;
+
+cursor:pointer;
+
+margin:5px;
+
+}
+
+button:hover{
+
+opacity:0.9;
+
+}
+
+
+/* ================================================= */
+/* INPUT */
+/* ================================================= */
+
+input,select{
+
+padding:8px;
+
+margin-top:10px;
+
+margin-right:10px;
+
+border-radius:6px;
+
+border:1px solid #ccc;
+
+}
+
+
+/* ================================================= */
+/* SETTINGS */
+/* ================================================= */
+
+#timing,
+#gps,
+#holiday{
+
+background:white;
+
+padding:20px;
+
+border-radius:10px;
+
+border:1px solid #ddd;
+
+}
+
+
+/* ================================================= */
+/* MOBILE */
+/* ================================================= */
+
+@media(max-width:768px){
+
+.sidebar{
+
+position:absolute;
+
+height:100%;
+
+z-index:100;
+
+}
+
+.header-center{
+
+font-size:14px;
+
+}
+
+.system-name{
+
+display:none;
+
+}
+
+}
+
+
+
+
+

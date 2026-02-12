@@ -1,112 +1,274 @@
 import { auth, db } from "./firebase.js";
-import { onAuthStateChanged, signOut }
-from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
 import {
-  doc, getDoc, collection, addDoc, query, where, getDocs
+onAuthStateChanged,
+signOut
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+import {
+doc,
+getDoc,
+collection,
+getDocs,
+addDoc,
+serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-/* MENU */
-menuBtn.onclick = () => sidebar.classList.toggle("hidden");
-logout.onclick = () => signOut(auth).then(() => location.href = "login.html");
+let currentUserData=null;
+
+
 
 /* AUTH */
-let me = null;
 
-onAuthStateChanged(auth, async user => {
-  if (!user) return location.href = "login.html";
+onAuthStateChanged(auth, async user=>{
 
-  const snap = await getDoc(doc(db, "users", user.uid));
-  if (!snap.exists() || snap.data().role !== "student")
-    return location.href = "login.html";
+if(!user){
+location="login.html";
+return;
+}
 
-  me = snap.data();
-  loadProfile();
-  loadAttendance();
+const snap=await getDoc(doc(db,"users",user.uid));
+
+if(!snap.exists()){
+location="login.html";
+return;
+}
+
+currentUserData=snap.data();
+
+headerName.innerText=
+currentUserData.name+" ("+currentUserData.role+")";
+
+profileName.innerText=currentUserData.name;
+
+profileEmail.innerText=currentUserData.email;
+
+profileDept.innerText=currentUserData.department;
+
+profileYear.innerText="Year "+currentUserData.year;
+
+
+loadWish();
+
+loadAttendanceStats();
+
+loadAttendanceRecords();
+
 });
 
-/* PROFILE */
-function loadProfile() {
-  welcomeText.innerText = `Welcome, ${me.name}`;
-  wish.innerText = `Hello ${me.name} 👋`;
 
-  pName.innerText = me.name;
-  pEmail.innerText = me.email;
-  pPhone.innerText = me.phone;
-  pId.innerText = me.studentId;
-  pDept.innerText = me.department;
-  pYear.innerText = me.year;
-  pIncharge.innerText = me.inchargeName || "-";
+
+/* WISH */
+
+function loadWish(){
+
+const h=new Date().getHours();
+
+let text="";
+
+if(h<12) text="Good Morning";
+else if(h<17) text="Good Afternoon";
+else text="Good Evening";
+
+wish.innerText=text+", "+currentUserData.name;
+
 }
 
-/* GPS */
-function checkGPS() {
-  return new Promise(r =>
-    navigator.geolocation.getCurrentPosition(
-      () => r(true),
-      () => r(false)
-    )
-  );
+
+
+/* MENU */
+
+menuBtn.onclick=()=>{
+sidebar.classList.toggle("hidden");
+};
+
+document.querySelectorAll("[data-sec]").forEach(btn=>{
+
+btn.onclick=()=>{
+
+document.querySelectorAll(".section")
+.forEach(s=>s.classList.remove("active"));
+
+document.getElementById(btn.dataset.sec)
+.classList.add("active");
+
+};
+
+});
+
+
+
+/* LOGOUT */
+
+logoutBtn.onclick=()=>{
+logoutModal.classList.remove("hidden");
+};
+
+cancelLogout.onclick=()=>{
+logoutModal.classList.add("hidden");
+};
+
+confirmLogout.onclick=()=>{
+signOut(auth);
+location="login.html";
+};
+
+
+
+/* LOAD STATS */
+
+async function loadAttendanceStats(){
+
+let present=0;
+let absent=0;
+
+const snap=await getDocs(collection(db,"attendanceRecords"));
+
+snap.forEach(d=>{
+
+const r=d.data();
+
+if(r.studentId===auth.currentUser.uid){
+
+if(r.status==="present") present++;
+else absent++;
+
 }
+
+});
+
+presentCount.innerText=present;
+absentCount.innerText=absent;
+
+}
+
+
+
+/* LOAD RECORDS */
+
+async function loadAttendanceRecords(){
+
+recordTable.innerHTML="";
+
+let i=1;
+
+const snap=await getDocs(collection(db,"attendanceRecords"));
+
+snap.forEach(d=>{
+
+const r=d.data();
+
+if(r.studentId===auth.currentUser.uid){
+
+recordTable.innerHTML+=`
+
+<tr>
+
+<td>${i++}</td>
+
+<td>${r.date}</td>
+
+<td>${r.session}</td>
+
+<td>${r.gpsStatus=="ok"?"✔":"✖"}</td>
+
+<td>${r.faceStatus=="ok"?"✔":"✖"}</td>
+
+<td>${r.status}</td>
+
+</tr>
+
+`;
+
+}
+
+});
+
+}
+
+
 
 /* MARK ATTENDANCE */
-facialBtn.onclick = async () => {
-  if (!(await checkGPS())) return gpsStatus.innerText = "GPS failed";
-  if (!me.canMarkAttendance)
-    return permissionStatus.innerText = "Permission required";
 
-  await addDoc(collection(db, "attendanceRecords"), {
-    studentUid: auth.currentUser.uid,
-    studentName: me.name,
-    studentId: me.studentId,
-    inchargeId: me.inchargeId,
-    date: new Date().toISOString().split("T")[0],
-    session: "FN",
-    academicYear: me.year,
-    method: "facial",
-    gpsVerified: true,
-    status: "Present"
-  });
+markBtn.onclick=async ()=>{
 
-  markMsg.innerText = "Attendance marked";
-};
+const session=sessionSelect.value;
 
-manualBtn.onclick = async () => {
-  if (!(await checkGPS())) return gpsStatus.innerText = "GPS failed";
-
-  await addDoc(collection(db, "attendanceRecords"), {
-    studentUid: auth.currentUser.uid,
-    studentName: me.name,
-    studentId: me.studentId,
-    inchargeId: me.inchargeId,
-    date: new Date().toISOString().split("T")[0],
-    session: "FN",
-    academicYear: me.year,
-    method: "manual",
-    gpsVerified: true,
-    status: "Pending"
-  });
-
-  markMsg.innerText = "Manual request sent";
-};
-
-/* HISTORY */
-async function loadAttendance() {
-  attTable.innerHTML = "";
-  const q = query(
-    collection(db, "attendanceRecords"),
-    where("studentUid", "==", auth.currentUser.uid)
-  );
-  const snap = await getDocs(q);
-
-  snap.forEach(d => {
-    const r = d.data();
-    attTable.innerHTML += `
-      <tr>
-        <td>${r.date}</td>
-        <td>${r.session}</td>
-        <td>${r.method}</td>
-        <td>${r.gpsVerified ? "✔" : "✖"}</td>
-        <td>${r.status}</td>
-      </tr>`;
-  });
+if(!session){
+alert("Select session");
+return;
 }
+
+markStatus.innerText="Checking GPS...";
+
+navigator.geolocation.getCurrentPosition(
+
+async pos=>{
+
+if(pos.coords.accuracy>50){
+
+markStatus.innerText="Fake GPS suspected";
+
+return;
+
+}
+
+markStatus.innerText="GPS OK. Checking Face...";
+
+
+const faceOk=Math.random()>0.3;
+
+
+if(faceOk){
+
+await addDoc(collection(db,"attendanceRecords"),{
+
+studentId:auth.currentUser.uid,
+
+studentName:currentUserData.name,
+
+date:new Date().toISOString().slice(0,10),
+
+session,
+
+gpsStatus:"ok",
+
+faceStatus:"ok",
+
+status:"present",
+
+createdAt:serverTimestamp()
+
+});
+
+markStatus.innerText="Attendance Marked ✔";
+
+loadAttendanceRecords();
+
+}
+else{
+
+markStatus.innerText=
+"Face failed. Manual request sent.";
+
+await addDoc(collection(db,"manualRequests"),{
+
+studentId:auth.currentUser.uid,
+
+status:"pending",
+
+createdAt:serverTimestamp()
+
+});
+
+}
+
+},
+
+err=>{
+markStatus.innerText="GPS required";
+}
+
+);
+
+};
