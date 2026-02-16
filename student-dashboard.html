@@ -1,21 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
 <title>Student Dashboard</title>
 
-<link rel="stylesheet" href="student-dashboard.css">
+<link rel="stylesheet"
+href="student-dashboard.css">
 
-<script defer src="face-api/face-api.min.js"></script>
+<script defer
+src="face-api/face-api.min.js"></script>
 
-<script type="module" src="student-dashboard.js"></script>
+<script type="module"
+src="student-dashboard.js"></script>
 
 </head>
 
+
 <body>
+
 
 
 <!-- HEADER -->
@@ -24,19 +32,52 @@
 
 <div class="header-left">
 
-<button id="menuBtn">☰</button>
-
-<span id="studentName">Student</span>
-
-(<span id="studentRole">Student</span>)
+<button id="menuBtn"
+class="menu-btn">☰</button>
 
 </div>
 
+
+<div class="header-center">
+
+<div class="user-name"
+id="studentName">
+
+Student Name
+
+</div>
+
+<div class="user-role"
+id="studentRole">
+
+Student
+
+</div>
+
+</div>
+
+
 <div class="header-right">
 
-🔔 <span id="notificationCount">0</span>
+<div class="notification">
 
-<button id="logoutBtn">Logout</button>
+<span class="bell-icon">🔔</span>
+
+<span class="notification-badge"
+id="notificationCount">
+
+0
+
+</span>
+
+</div>
+
+<button id="logoutBtn"
+class="logout-btn">
+
+Logout
+
+</button>
 
 </div>
 
@@ -44,23 +85,34 @@
 
 
 
+
 <!-- SIDEBAR -->
 
-<aside class="sidebar" id="sidebar">
+<aside class="sidebar"
+id="sidebar">
 
 <ul>
 
-<li onclick="showPage('homePage')">Home</li>
+<li onclick="showPage('homePage')">
+Home
+</li>
 
-<li onclick="showPage('markPage')">Mark Attendance</li>
+<li onclick="showPage('markPage')">
+Mark Attendance
+</li>
 
-<li onclick="showPage('profilePage')">Profile</li>
+<li onclick="showPage('profilePage')">
+Profile
+</li>
 
-<li onclick="showPage('recordsPage')">Attendance Records</li>
+<li onclick="showPage('recordsPage')">
+Attendance Records
+</li>
 
 </ul>
 
 </aside>
+
 
 
 
@@ -70,83 +122,139 @@
 
 
 
-<!-- HOME PAGE -->
 
-<section id="homePage" class="page active">
+<!-- HOME -->
 
-<h2 id="greetingText">Good Morning</h2>
+<section id="homePage"
+class="page active">
+
+<h2 id="greetingText">
+Good Morning 👋
+</h2>
 
 
 <div class="status-box">
 
-<div class="status-title">Attendance Status</div>
+<div class="status-title">
 
-<div id="attendanceMessage" class="status-message">
-Checking attendance...
+Attendance Status
+
 </div>
+
+
+<div id="attendanceMessage"
+class="status-message">
+
+Checking attendance...
+
+</div>
+
 
 <div class="session-status">
 
 <div class="session-card">
 
-<div class="session-label">FN</div>
+<div class="session-label">
+FN
+</div>
 
-<div id="fnStatus" class="session-value">Checking...</div>
+<div id="fnStatus"
+class="session-value">
+
+Checking...
 
 </div>
+
+</div>
+
 
 <div class="session-card">
 
-<div class="session-label">AN</div>
+<div class="session-label">
+AN
+</div>
 
-<div id="anStatus" class="session-value">Checking...</div>
+<div id="anStatus"
+class="session-value">
+
+Checking...
 
 </div>
 
 </div>
 
-<button id="homeMarkBtn">Mark Attendance</button>
+</div>
+
+
+<button id="homeMarkBtn">
+
+Mark Attendance
+
+</button>
 
 </div>
+
 
 
 
 <div class="cards-container">
 
+
 <div class="card">
 
-<div class="card-title">Total Days</div>
+<div class="card-title">
+Total Days
+</div>
 
-<div id="totalDays" class="card-value">0</div>
+<div id="totalDays"
+class="card-value">
+0
+</div>
 
 </div>
 
 
 <div class="card">
 
-<div class="card-title">Present</div>
+<div class="card-title">
+Present
+</div>
 
-<div id="presentDays" class="card-value">0</div>
+<div id="presentDays"
+class="card-value">
+0
+</div>
 
 </div>
 
 
 <div class="card">
 
-<div class="card-title">Absent</div>
+<div class="card-title">
+Absent
+</div>
 
-<div id="absentDays" class="card-value">0</div>
+<div id="absentDays"
+class="card-value">
+0
+</div>
 
 </div>
 
 
 <div class="card">
 
-<div class="card-title">Percentage</div>
+<div class="card-title">
+Percentage
+</div>
 
-<div id="percentage" class="card-value">0%</div>
+<div id="percentage"
+class="card-value">
+0%
+</div>
 
 </div>
+
 
 </div>
 
@@ -154,31 +262,57 @@ Checking attendance...
 
 
 
-<!-- MARK ATTENDANCE PAGE -->
 
-<section id="markPage" class="page">
+<!-- MARK ATTENDANCE -->
+
+<section id="markPage"
+class="page">
 
 <div class="center-container">
 
 <div class="attendance-box">
 
-<h2>Mark Attendance</h2>
+<h2>
+Mark Attendance
+</h2>
+
 
 <div class="progress-container">
 
-<div id="gpsBlock" class="progress gray">GPS</div>
+<div id="gpsBlock"
+class="progress gray">
+GPS
+</div>
 
-<div id="faceBlock" class="progress gray">Facial</div>
+<div id="faceBlock"
+class="progress gray">
+Facial
+</div>
 
-<div id="manualBlock" class="progress gray">Manual</div>
+<div id="manualBlock"
+class="progress gray">
+Manual
+</div>
 
 </div>
 
-<p>Session: <span id="sessionText">FN</span></p>
 
-<button id="markBtn">Mark Attendance</button>
+<p>
+Session:
+<span id="sessionText">
+FN
+</span>
+</p>
 
-<video id="video" autoplay muted></video>
+
+<button id="markBtn">
+Mark Attendance
+</button>
+
+
+<video id="video"
+autoplay muted>
+</video>
 
 </div>
 
@@ -188,86 +322,59 @@ Checking attendance...
 
 
 
-<!-- PROFILE PAGE -->
 
-<section id="profilePage" class="page">
+<!-- PROFILE -->
+
+<section id="profilePage"
+class="page">
 
 <div class="center-container">
 
 <div class="profile-container">
 
-<h2>Profile</h2>
+<h2>
+Profile
+</h2>
 
 
 <div class="profile-row">
-
-<span class="profile-label">Name</span>
-
-<span id="profileName" class="profile-value"></span>
-
+<span>Name</span>
+<span id="profileName"></span>
 </div>
 
-
 <div class="profile-row">
-
-<span class="profile-label">Student ID</span>
-
-<span id="profileStudentId" class="profile-value"></span>
-
+<span>Student ID</span>
+<span id="profileStudentId"></span>
 </div>
 
-
 <div class="profile-row">
-
-<span class="profile-label">Email</span>
-
-<span id="profileEmail" class="profile-value"></span>
-
+<span>Email</span>
+<span id="profileEmail"></span>
 </div>
 
-
 <div class="profile-row">
-
-<span class="profile-label">Phone</span>
-
-<span id="profilePhone" class="profile-value"></span>
-
+<span>Phone</span>
+<span id="profilePhone"></span>
 </div>
 
-
 <div class="profile-row">
-
-<span class="profile-label">Department</span>
-
-<span id="profileDepartment" class="profile-value"></span>
-
+<span>Department</span>
+<span id="profileDepartment"></span>
 </div>
 
-
 <div class="profile-row">
-
-<span class="profile-label">Year</span>
-
-<span id="profileYear" class="profile-value"></span>
-
+<span>Year</span>
+<span id="profileYear"></span>
 </div>
 
-
 <div class="profile-row">
-
-<span class="profile-label">Incharge</span>
-
-<span id="profileIncharge" class="profile-value"></span>
-
+<span>Incharge</span>
+<span id="profileIncharge"></span>
 </div>
 
-
 <div class="profile-row">
-
-<span class="profile-label">Role</span>
-
-<span id="profileRole" class="profile-value"></span>
-
+<span>Role</span>
+<span id="profileRole"></span>
 </div>
 
 
@@ -279,15 +386,20 @@ Checking attendance...
 
 
 
-<!-- RECORDS PAGE -->
 
-<section id="recordsPage" class="page">
+<!-- RECORDS -->
+
+<section id="recordsPage"
+class="page">
 
 <div class="center-container">
 
 <div class="records-container">
 
-<h2>Attendance Records</h2>
+<h2>
+Attendance Records
+</h2>
+
 
 <table>
 
@@ -313,7 +425,10 @@ Checking attendance...
 
 </thead>
 
-<tbody id="recordsTable"></tbody>
+
+<tbody id="recordsTable">
+</tbody>
+
 
 </table>
 
@@ -324,8 +439,11 @@ Checking attendance...
 </section>
 
 
+
+
 </main>
 
 
 </body>
+
 </html>

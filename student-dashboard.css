@@ -1,214 +1,421 @@
 body{
+
 margin:0;
-font-family:"Segoe UI",sans-serif;
+
+font-family:Segoe UI;
+
 background:#f4f6f8;
+
 }
 
+
+
+/* HEADER */
 
 .header{
+
 position:fixed;
+
 top:0;
-width:100%;
+
+left:0;
+
+right:0;
+
 height:60px;
+
 background:white;
+
 display:flex;
-justify-content:space-between;
+
 align-items:center;
+
+justify-content:space-between;
+
 padding:0 20px;
+
 border-bottom:1px solid #ddd;
+
+z-index:1000;
+
 }
 
 
+.header-center{
+
+position:absolute;
+
+left:50%;
+
+transform:translateX(-50%);
+
+text-align:center;
+
+}
+
+
+.user-name{
+
+font-weight:600;
+
+}
+
+
+.user-role{
+
+font-size:12px;
+
+color:gray;
+
+}
+
+
+.logout-btn{
+
+background:#2563eb;
+
+color:white;
+
+border:none;
+
+padding:8px 16px;
+
+border-radius:6px;
+
+cursor:pointer;
+
+}
+
+
+
+/* SIDEBAR */
+
 .sidebar{
+
 position:fixed;
+
 top:60px;
+
 left:-240px;
+
 width:240px;
+
 height:100%;
+
 background:white;
+
 border-right:1px solid #ddd;
+
 transition:0.3s;
+
 }
 
 .sidebar.show{
+
 left:0;
+
 }
 
 .sidebar li{
+
 padding:15px;
+
 cursor:pointer;
+
 }
 
 .sidebar li:hover{
-background:#f2f2f2;
+
+background:#f0f0f0;
+
 }
 
 
+
+/* MAIN */
+
 .main{
+
 margin-top:60px;
+
 padding:20px;
+
 }
 
 
 .page{
+
 display:none;
+
 }
 
+
 .page.active{
+
 display:block;
+
 }
+
 
 
 /* CENTER */
 
 .center-container{
+
 display:flex;
+
 justify-content:center;
+
 }
+
 
 
 /* STATUS BOX */
 
 .status-box{
+
 background:white;
+
 padding:20px;
+
 border-radius:10px;
+
 border:1px solid #ddd;
+
 margin-bottom:20px;
+
 }
 
 
 .session-status{
+
 display:flex;
+
 gap:10px;
-margin-top:10px;
+
 }
 
+
 .session-card{
+
 flex:1;
+
 background:#f8f9fa;
+
 padding:10px;
+
 border-radius:8px;
+
 text-align:center;
+
 }
+
 
 
 /* CARDS */
 
 .cards-container{
+
 display:grid;
+
 grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+
 gap:15px;
+
 }
+
 
 .card{
+
 background:white;
+
 padding:15px;
+
 border-radius:10px;
+
 border:1px solid #ddd;
+
 text-align:center;
+
 }
+
 
 .card-value{
+
 font-size:22px;
+
 font-weight:bold;
+
 }
 
 
-/* ATTENDANCE BOX */
+
+/* ATTENDANCE */
 
 .attendance-box{
+
 background:white;
+
 padding:20px;
+
 border-radius:10px;
+
 border:1px solid #ddd;
+
 max-width:500px;
+
 width:100%;
+
 }
+
 
 
 /* PROFILE */
 
 .profile-container{
+
 background:white;
+
 padding:20px;
+
 border-radius:10px;
+
 border:1px solid #ddd;
+
 max-width:500px;
+
 width:100%;
+
 }
 
+
 .profile-row{
+
 display:flex;
+
 justify-content:space-between;
+
 padding:10px 0;
+
 border-bottom:1px solid #eee;
+
 }
+
 
 
 /* RECORDS */
 
 .records-container{
+
 background:white;
+
 padding:20px;
+
 border-radius:10px;
+
 border:1px solid #ddd;
+
 max-width:900px;
+
 width:100%;
+
 }
 
 
 table{
+
 width:100%;
+
 border-collapse:collapse;
+
 }
 
+
 th, td{
+
 padding:10px;
+
 border-bottom:1px solid #ddd;
+
 }
+
 
 
 /* PROGRESS */
 
 .progress-container{
+
 display:flex;
+
 gap:10px;
+
 margin-bottom:15px;
+
 }
+
 
 .progress{
+
 flex:1;
+
 padding:10px;
+
 border-radius:6px;
+
 color:white;
+
 text-align:center;
+
 }
 
+
 .gray{background:gray;}
+
 .yellow{background:orange;}
+
 .green{background:green;}
+
 .red{background:red;}
+
 .blue{background:blue;}
 
 
+
+/* BUTTON */
+
 button{
-background:#1a73e8;
+
+background:#2563eb;
+
 color:white;
+
 border:none;
+
 padding:10px 18px;
+
 border-radius:6px;
+
 cursor:pointer;
-margin-top:10px;
+
 }
+
 
 button:hover{
-background:#155ec9;
+
+background:#1d4ed8;
+
 }
 
 
+
+/* VIDEO */
+
 video{
+
 width:100%;
+
 margin-top:10px;
+
 border-radius:8px;
+
 }
