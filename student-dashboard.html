@@ -1,35 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Student Dashboard</title>
 
 <link rel="stylesheet" href="student-dashboard.css">
 
-<!-- FACE API -->
-<script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+<script defer src="face-api/face-api.min.js"></script>
+
+<script type="module" src="student-dashboard.js"></script>
 
 </head>
+
 <body>
 
+
 <!-- HEADER -->
+
 <header class="header">
 
 <div class="header-left">
-<button id="menuBtn">☰</button>
-<span>College Attendance System</span>
-</div>
 
-<div class="header-center">
-<span id="studentName">Loading...</span>
+<button id="menuBtn">☰</button>
+
+<span id="studentName">Student</span>
+
+(<span id="studentRole">Student</span>)
+
 </div>
 
 <div class="header-right">
 
-<div class="bell" id="bellBtn">
-🔔
-<span id="bellCount" class="hidden">0</span>
-</div>
+🔔 <span id="notificationCount">0</span>
 
 <button id="logoutBtn">Logout</button>
 
@@ -38,47 +43,109 @@
 </header>
 
 
-<!-- LAYOUT -->
-<div class="layout">
 
 <!-- SIDEBAR -->
-<nav id="sidebar" class="sidebar hidden">
 
-<div data-page="home">Home</div>
-<div data-page="attendance">Mark Attendance</div>
-<div data-page="records">Attendance Record</div>
+<aside class="sidebar" id="sidebar">
 
-</nav>
+<ul>
+
+<li onclick="showPage('homePage')">Home</li>
+
+<li onclick="showPage('markPage')">Mark Attendance</li>
+
+<li onclick="showPage('profilePage')">Profile</li>
+
+<li onclick="showPage('recordsPage')">Attendance Records</li>
+
+</ul>
+
+</aside>
 
 
-<!-- CONTENT -->
-<main class="content">
 
-<!-- HOME -->
+<!-- MAIN -->
+
+<main class="main">
+
+
+
+<!-- HOME PAGE -->
+
 <section id="homePage" class="page active">
 
-<h2 id="wishText"></h2>
+<h2 id="greetingText">Good Morning</h2>
 
-<div class="cards">
 
-<div class="card">
-FN
-<div id="fnStatus">—</div>
+<div class="status-box">
+
+<div class="status-title">Attendance Status</div>
+
+<div id="attendanceMessage" class="status-message">
+Checking attendance...
 </div>
 
-<div class="card">
-AN
-<div id="anStatus">—</div>
+<div class="session-status">
+
+<div class="session-card">
+
+<div class="session-label">FN</div>
+
+<div id="fnStatus" class="session-value">Checking...</div>
+
 </div>
 
-<div class="card">
-Present
-<div id="presentCount">0</div>
+<div class="session-card">
+
+<div class="session-label">AN</div>
+
+<div id="anStatus" class="session-value">Checking...</div>
+
 </div>
 
+</div>
+
+<button id="homeMarkBtn">Mark Attendance</button>
+
+</div>
+
+
+
+<div class="cards-container">
+
 <div class="card">
-Absent
-<div id="absentCount">0</div>
+
+<div class="card-title">Total Days</div>
+
+<div id="totalDays" class="card-value">0</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="card-title">Present</div>
+
+<div id="presentDays" class="card-value">0</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="card-title">Absent</div>
+
+<div id="absentDays" class="card-value">0</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="card-title">Percentage</div>
+
+<div id="percentage" class="card-value">0%</div>
+
 </div>
 
 </div>
@@ -86,85 +153,179 @@ Absent
 </section>
 
 
-<!-- MARK ATTENDANCE -->
-<section id="attendancePage" class="page">
+
+<!-- MARK ATTENDANCE PAGE -->
+
+<section id="markPage" class="page">
+
+<div class="center-container">
 
 <div class="attendance-box">
 
 <h2>Mark Attendance</h2>
 
-<div id="sessionText"></div>
+<div class="progress-container">
 
-<button id="markBtn">Mark Attendance</button>
+<div id="gpsBlock" class="progress gray">GPS</div>
 
-<!-- PROGRESS -->
-<div class="progress">
+<div id="faceBlock" class="progress gray">Facial</div>
 
-<div id="gpsStep" class="step gray">GPS</div>
-
-<div id="faceStep" class="step gray hidden">Facial</div>
-
-<div id="manualStep" class="step gray hidden">Manual</div>
+<div id="manualBlock" class="progress gray">Manual</div>
 
 </div>
 
-<!-- CAMERA -->
-<video id="video" autoplay muted class="hidden"></video>
+<p>Session: <span id="sessionText">FN</span></p>
 
-<button id="captureBtn" class="hidden">Capture Face</button>
+<button id="markBtn">Mark Attendance</button>
 
-<div id="statusText"></div>
+<video id="video" autoplay muted></video>
+
+</div>
 
 </div>
 
 </section>
 
 
-<!-- RECORD -->
+
+<!-- PROFILE PAGE -->
+
+<section id="profilePage" class="page">
+
+<div class="center-container">
+
+<div class="profile-container">
+
+<h2>Profile</h2>
+
+
+<div class="profile-row">
+
+<span class="profile-label">Name</span>
+
+<span id="profileName" class="profile-value"></span>
+
+</div>
+
+
+<div class="profile-row">
+
+<span class="profile-label">Student ID</span>
+
+<span id="profileStudentId" class="profile-value"></span>
+
+</div>
+
+
+<div class="profile-row">
+
+<span class="profile-label">Email</span>
+
+<span id="profileEmail" class="profile-value"></span>
+
+</div>
+
+
+<div class="profile-row">
+
+<span class="profile-label">Phone</span>
+
+<span id="profilePhone" class="profile-value"></span>
+
+</div>
+
+
+<div class="profile-row">
+
+<span class="profile-label">Department</span>
+
+<span id="profileDepartment" class="profile-value"></span>
+
+</div>
+
+
+<div class="profile-row">
+
+<span class="profile-label">Year</span>
+
+<span id="profileYear" class="profile-value"></span>
+
+</div>
+
+
+<div class="profile-row">
+
+<span class="profile-label">Incharge</span>
+
+<span id="profileIncharge" class="profile-value"></span>
+
+</div>
+
+
+<div class="profile-row">
+
+<span class="profile-label">Role</span>
+
+<span id="profileRole" class="profile-value"></span>
+
+</div>
+
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- RECORDS PAGE -->
+
 <section id="recordsPage" class="page">
 
-<h2>Attendance Record</h2>
+<div class="center-container">
+
+<div class="records-container">
+
+<h2>Attendance Records</h2>
 
 <table>
 
 <thead>
+
 <tr>
+
+<th>S.No</th>
+
 <th>Date</th>
+
 <th>Session</th>
+
+<th>Time</th>
+
 <th>GPS</th>
-<th>Facial</th>
-<th>Manual</th>
+
+<th>Method</th>
+
 <th>Status</th>
+
 </tr>
+
 </thead>
 
-<tbody id="recordTable"></tbody>
+<tbody id="recordsTable"></tbody>
 
 </table>
 
+</div>
+
+</div>
+
 </section>
+
 
 </main>
 
-</div>
-
-
-<!-- LOGOUT MODAL -->
-<div id="logoutModal" class="modal hidden">
-
-<div class="modal-box">
-
-<h3>Confirm Logout?</h3>
-
-<button id="confirmLogout">Yes</button>
-<button id="cancelLogout">Cancel</button>
-
-</div>
-
-</div>
-
-
-<script type="module" src="student-dashboard.js"></script>
 
 </body>
 </html>
