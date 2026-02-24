@@ -10,21 +10,37 @@
 <header class="header">
 
 <div class="header-left">
-<button id="menuBtn">☰</button>
+<button id="menuBtn" type="button" aria-label="Toggle menu">☰</button>
 <span class="system-name">College Attendance System</span>
 </div>
 
 <div class="header-center">
-<span id="userDisplay"></span>
+	<div class="header-info">
+		<div class="info-row">
+			<div class="info-col">
+                <span id="currentName" class="name">User</span>
+				<span id="currentRole" class="role">Role</span>
+				
+			</div>
+			<div class="info-col">
+                <span id="currentTime" class="time">--:--:--</span>
+				<span id="currentDate" class="date">--/--/----</span>
+				
+			</div>
+		</div>
+	</div>
+	<span id="userDisplay" style="display:none;"></span>
 </div>
 
 <div class="header-right">
 
-<span id="notifyBtn" class="notify">
+<span id="notifyBtn" class="notify" role="button" tabindex="0" aria-label="Notifications">
 🔔 <span id="notifyCount" class="count hidden">0</span>
 </span>
 
-<button id="logoutBtn">Logout</button>
+<div id="notifyList" class="notify-list hidden" aria-hidden="true"></div>
+
+<button id="logoutBtn" type="button">Logout</button>
 
 </div>
 
@@ -33,7 +49,7 @@
 
 <div class="layout">
 
-<nav id="sidebar" class="sidebar hidden">
+<nav id="sidebar" class="sidebar hidden" role="navigation" aria-label="Main navigation">
 
 <div data-sec="home">Home</div>
 
@@ -43,9 +59,9 @@
 
 <div data-sec="attendance">Attendance</div>
 
-<div id="settingsToggle">Settings ▼</div>
+<div id="settingsToggle" role="button" tabindex="0" aria-controls="settingsSubmenu" aria-expanded="false">Settings ▼</div>
 
-<div id="settingsSubmenu" class="submenu hidden">
+<div id="settingsSubmenu" class="submenu hidden" aria-hidden="true">
 
 <div data-sec="timing">Attendance Timing</div>
 
@@ -58,7 +74,7 @@
 </nav>
 
 
-<main class="content">
+<main class="content" role="main">
 
 
 <!-- HOME -->
@@ -66,6 +82,7 @@
 <section id="home" class="section active">
 
 <h2 id="welcome"></h2>
+<div id="holidayStatus" style="margin: 10px 0; font-size: 14px; font-weight: 500;"></div>
 
 <div class="dash-grid">
 
@@ -73,8 +90,28 @@
 <div class="card">Incharge<h3 id="totalIncharge">0</h3></div>
 <div class="card">HOD<h3 id="totalHod">0</h3></div>
 <div class="card">Pending<h3 id="pendingCount">0</h3></div>
+<div class="card">FN
+	<div>Present <h3 id="fnPresent">0</h3></div>
+	<div>Absent <h3 id="fnAbsent">0</h3></div>
+</div>
+<div class="card">AN
+	<div>Present <h3 id="anPresent">0</h3></div>
+	<div>Absent <h3 id="anAbsent">0</h3></div>
+</div>
 <div class="card">Present<h3 id="presentCount">0</h3></div>
 <div class="card">Absent<h3 id="absentCount">0</h3></div>
+<div class="card">Session Time
+	<div id="sessionInfo" style="font-size:13px; margin-top:8px;">
+		<div id="currentSession" style="font-weight:600; color:#0071e3;">--</div>
+		<div id="timeLeft" style="color:#666; font-size:12px; margin-top:4px;">00:00:00 left</div>
+	</div>
+</div>
+<div class="card">Settings Status
+	<div id="settingsStatus" style="font-size:12px; margin-top:8px;">
+		<div id="timingStatus" style="margin:4px 0;"><span style="color:#666;">Timing:</span> <span id="timingStatusBadge" style="color:#ccc;">⚪ N/A</span></div>
+		<div id="gpsStatus" style="margin:4px 0;"><span style="color:#666;">GPS:</span> <span id="gpsStatusBadge" style="color:#ccc;">⚪ N/A</span></div>
+	</div>
+</div>
 
 </div>
 
@@ -86,9 +123,10 @@
 <section id="approvals" class="section">
 
 <h2>Approvals</h2>
+<input id="approvalSearch" placeholder="Search Approvals" aria-label="Search approvals">
 
-<button id="approveSelected">Approve Selected</button>
-<button id="rejectSelected">Reject Selected</button>
+<button id="approveSelected" type="button">Approve Selected</button>
+<button id="rejectSelected" type="button">Reject Selected</button>
 
 <table>
 
@@ -120,11 +158,11 @@
 
 <h2>Staff Management</h2>
 
-<input id="staffSearch" placeholder="Search Staff">
+<input id="staffSearch" placeholder="Search Staff" aria-label="Search staff">
 
-<button onclick="loadStaff('all')">All</button>
-<button onclick="loadStaff('hod')">HOD</button>
-<button onclick="loadStaff('incharge')">Incharge</button>
+<button type="button" onclick="loadStaff('all')">All</button>
+<button type="button" onclick="loadStaff('hod')">HOD</button>
+<button type="button" onclick="loadStaff('incharge')">Incharge</button>
 
 <table>
 
@@ -152,13 +190,13 @@
 
 <section id="detailsSection" class="section">
 
-<button onclick="goBack()">← Back</button>
+<button type="button" onclick="goBack()">← Back</button>
 
 <h2 id="detailsTitle"></h2>
 
 <div id="detailsInfo"></div>
 
-<input id="detailsSearch" placeholder="Search">
+<input id="detailsSearch" placeholder="Search" aria-label="Search details">
 
 <table>
 
@@ -177,7 +215,7 @@
 
 <h2>Attendance</h2>
 
-<input id="attendanceSearch" placeholder="Search">
+<input id="attendanceSearch" placeholder="Search" aria-label="Search attendance">
 
 <select id="yearFilter">
 
@@ -189,7 +227,7 @@
 
 </select>
 
-<button id="downloadCSV">Download CSV</button>
+<button id="downloadCSV" type="button">Download CSV</button>
 
 <table>
 
@@ -229,7 +267,7 @@
 <input type="time" id="anStart">
 <input type="time" id="anEnd">
 
-<button id="saveTiming">Save</button>
+<button id="saveTiming" type="button">Save</button>
 
 </section>
 
@@ -244,7 +282,7 @@
 <input id="lng" placeholder="Longitude">
 <input id="radius" placeholder="Radius">
 
-<button id="saveGPS">Save</button>
+<button id="saveGPS" type="button">Save</button>
 
 </section>
 
@@ -255,10 +293,27 @@
 
 <h2>Holiday</h2>
 
-<input type="date" id="holidayDate">
-<input id="holidayReason" placeholder="Reason">
+<label for="holidayMode">Mode:</label>
+<select id="holidayMode">
+	<option value="single">Single Day</option>
+	<option value="multiple">Multiple Days</option>
+</select>
 
-<button id="addHoliday">Add</button>
+<div id="singleHoliday">
+	<label for="holidayDate">Date:</label>
+	<input type="date" id="holidayDate">
+</div>
+
+<div id="rangeHoliday" class="hidden">
+	<label for="holidayStart">From:</label>
+	<input type="date" id="holidayStart">
+	<label for="holidayEnd">To:</label>
+	<input type="date" id="holidayEnd">
+</div>
+
+<input id="holidayReason" placeholder="Reason" aria-label="Holiday reason">
+
+<button id="addHoliday" type="button">Add</button>
 
 </section>
 
