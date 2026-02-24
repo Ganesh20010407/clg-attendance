@@ -132,6 +132,8 @@ const anPresentEl = document.getElementById("anPresent");
 const anAbsentEl = document.getElementById("anAbsent");
 const currentSession = document.getElementById("currentSession");
 const timeLeft = document.getElementById("timeLeft");
+const fnTiming = document.getElementById("fnTiming");
+const anTiming = document.getElementById("anTiming");
 const timingStatusBadge = document.getElementById("timingStatusBadge");
 const gpsStatusBadge = document.getElementById("gpsStatusBadge");
 
@@ -573,36 +575,90 @@ async function updateSessionInfo(){
 		const anStart = timingData.anStart || "00:00";
 		const anEnd = timingData.anEnd || "23:59";
 		
+		// Display FN and AN timings
+		if(fnTiming) fnTiming.innerText = `${fnStart} to ${fnEnd}`;
+		if(anTiming) anTiming.innerText = `${anStart} to ${anEnd}`;
+		
+		// Convert HH:MM to seconds for precise comparison
+		function toSeconds(t){
+			if(!t) return 0;
+			const parts = t.split(':').map(Number);
+			return (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+		}
+		
 		const now = new Date();
-		const hours = String(now.getHours()).padStart(2,'0');
-		const minutes = String(now.getMinutes()).padStart(2,'0');
-		const seconds = String(now.getSeconds()).padStart(2,'0');
-		const currentTime = `${hours}:${minutes}:${seconds}`;
+		const nowSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 		
-		let sessionName = "No Session";
-		let endTime = null;
+		const fnStartSec = toSeconds(fnStart);
+		const fnEndSec = toSeconds(fnEnd);
+		const anStartSec = toSeconds(anStart);
+		const anEndSec = toSeconds(anEnd);
 		
-		// Check which session is active
-		if(currentTime >= fnStart && currentTime <= fnEnd){
-			sessionName = "FN (Morning)";
-			endTime = fnEnd;
-		}else if(currentTime >= anStart && currentTime <= anEnd){
-			sessionName = "AN (Afternoon)";
-			endTime = anEnd;
-		}else{
-			sessionName = "No Active Session";
-			endTime = null;
+		let sessionName = "🔒 Marking session is closed";
+		let nextEndTime = null;
+		let nextEndTimeStr = null;
+		
+		// Determine active session using SECONDS for precision
+		if(nowSeconds >= fnStartSec && nowSeconds <= fnEndSec){
+			sessionName = "🌅 FN Active - Marking Available";
+			nextEndTime = fnEnd;
+			nextEndTimeStr = fnEnd;
+		}else if(nowSeconds >= anStartSec && nowSeconds <= anEndSec){
+			sessionName = "🌤️ AN Active - Marking Available";
+			nextEndTime = anEnd;
+			nextEndTimeStr = anEnd;
+		}
+		// If FN has ended, check if we're waiting for AN (handle wrap-around midnight)
+		else if(nowSeconds > fnEndSec){
+			// If AN time is earlier today than FN start, or we haven't reached AN yet today
+			if(anStartSec < fnStartSec || nowSeconds < anStartSec){
+				sessionName = "🔒 Marking session is closed · AN starts at " + anStart;
+				nextEndTime = anStart;
+				nextEndTimeStr = anStart;
+			}else{
+				sessionName = "🔒 Marking session is closed";
+				nextEndTime = fnStart;
+				nextEndTimeStr = fnStart;
+			}
+		}
+		// Before FN starts
+		else if(nowSeconds < fnStartSec){
+			sessionName = "⏳ Marking will start at " + fnStart + " - Please wait";
+			nextEndTime = fnStart;
+			nextEndTimeStr = fnStart;
 		}
 		
 		if(currentSession) currentSession.innerText = sessionName;
 		
-		// Calculate time remaining
-		if(endTime){
-			const [endHour, endMin] = endTime.split(':').map(Number);
-			const endDate = new Date();
-			endDate.setHours(endHour, endMin, 0);
+		// Always calculate time remaining to next event
+		if(nextEndTimeStr){
+			const parts = nextEndTimeStr.split(':').map(Number);
+			const endHour = parts[0] || 0;
+			const endMin = parts[1] || 0;
+			const endSec = parts[2] || 0;
+			const nextEventSeconds = endHour * 3600 + endMin * 60 + endSec;
 			
-			const remaining = Math.max(0, endDate - now);
+			// Determine if the target time is today or tomorrow
+			let targetDate;
+			if(sessionName.includes("Waiting for AN") || sessionName.includes("Waiting for FN")){
+				// For waiting states, check if target time has already passed today
+				if(nextEventSeconds <= nowSeconds){
+					// Target is tomorrow
+					targetDate = new Date(now);
+					targetDate.setDate(targetDate.getDate() + 1);
+					targetDate.setHours(endHour, endMin, endSec, 0);
+				}else{
+					// Target is today
+					targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHour, endMin, endSec);
+				}
+			}else{
+				// For active sessions, target is today
+				targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHour, endMin, endSec);
+			}
+			
+			let remaining = targetDate - now;
+			remaining = Math.max(0, remaining);
+			
 			const remainHours = Math.floor(remaining / (1000 * 60 * 60));
 			const remainMins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
 			const remainSecs = Math.floor((remaining % (1000 * 60)) / 1000);
@@ -610,7 +666,7 @@ async function updateSessionInfo(){
 			const timeStr = `${String(remainHours).padStart(2,'0')}:${String(remainMins).padStart(2,'0')}:${String(remainSecs).padStart(2,'0')} left`;
 			if(timeLeft) timeLeft.innerText = timeStr;
 		}else{
-			if(timeLeft) timeLeft.innerText = "-- Session --";
+			if(timeLeft) timeLeft.innerText = "00:00:00 left";
 		}
 	}catch(err){
 		console.error('updateSessionInfo error',err);
