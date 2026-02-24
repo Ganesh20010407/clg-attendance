@@ -717,3 +717,20 @@ Math.sin(dLon/2)**2;
 return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 
 }
+
+
+// ================ HEADER DATE & TIME ================
+function updateHeaderDateTime()
+{
+	const now = new Date();
+	const date = now.toLocaleDateString();
+	const time = now.toLocaleTimeString();
+	const dateEl = document.getElementById("currentDate");
+	const timeEl = document.getElementById("currentTime");
+	if(dateEl) dateEl.innerText = date;
+	if(timeEl) timeEl.innerText = time;
+}
+
+// start clock
+setInterval(updateHeaderDateTime, 1000);
+updateHeaderDateTime();
