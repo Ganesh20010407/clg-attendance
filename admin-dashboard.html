@@ -101,9 +101,19 @@
 <div class="card">Present<h3 id="presentCount">0</h3></div>
 <div class="card">Absent<h3 id="absentCount">0</h3></div>
 <div class="card">Session Time
-	<div id="sessionInfo" style="font-size:13px; margin-top:8px;">
-		<div id="currentSession" style="font-weight:600; color:#0071e3;">--</div>
-		<div id="timeLeft" style="color:#666; font-size:12px; margin-top:4px;">00:00:00 left</div>
+	<div id="sessionInfo" style="font-size:12px; margin-top:8px;">
+		<div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #eee;">
+			<div style="font-weight:600; color:#0071e3; margin-bottom:4px;">🌅 FN (Morning)</div>
+			<div id="fnTiming" style="color:#666; font-size:11px;">--:-- to --:--</div>
+		</div>
+		<div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #eee;">
+			<div style="font-weight:600; color:#0071e3; margin-bottom:4px;">🌤️ AN (Afternoon)</div>
+			<div id="anTiming" style="color:#666; font-size:11px;">--:-- to --:--</div>
+		</div>
+		<div style="background:#f0f7ff; padding:8px; border-radius:4px;">
+			<div id="currentSession" style="font-weight:600; color:#0071e3; margin-bottom:4px;">-- No Active Session --</div>
+			<div id="timeLeft" style="color:#666; font-size:11px;">00:00:00 left</div>
+		</div>
 	</div>
 </div>
 <div class="card">Settings Status
@@ -262,12 +272,37 @@
 
 <h2>Attendance Timing</h2>
 
-<input type="time" id="fnStart">
-<input type="time" id="fnEnd">
-<input type="time" id="anStart">
-<input type="time" id="anEnd">
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
 
-<button id="saveTiming" type="button">Save</button>
+	<!-- FN TIMING -->
+	<div style="background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+		<h3 style="margin-bottom: 15px; color: #333; font-size: 16px;">🌅 FN Timing (Morning)</h3>
+		<div style="margin-bottom: 15px;">
+			<label style="display: block; font-size: 13px; color: #666; margin-bottom: 5px; font-weight: 500;">Start Time</label>
+			<input type="time" id="fnStart" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+		</div>
+		<div>
+			<label style="display: block; font-size: 13px; color: #666; margin-bottom: 5px; font-weight: 500;">End Time</label>
+			<input type="time" id="fnEnd" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+		</div>
+	</div>
+
+	<!-- AN TIMING -->
+	<div style="background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+		<h3 style="margin-bottom: 15px; color: #333; font-size: 16px;">🌤️ AN Timing (Afternoon)</h3>
+		<div style="margin-bottom: 15px;">
+			<label style="display: block; font-size: 13px; color: #666; margin-bottom: 5px; font-weight: 500;">Start Time</label>
+			<input type="time" id="anStart" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+		</div>
+		<div>
+			<label style="display: block; font-size: 13px; color: #666; margin-bottom: 5px; font-weight: 500;">End Time</label>
+			<input type="time" id="anEnd" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+		</div>
+	</div>
+
+</div>
+
+<button id="saveTiming" type="button" style="margin-top: 25px; padding: 10px 24px; background: #0071e3; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px;">Save Timing</button>
 
 </section>
 
