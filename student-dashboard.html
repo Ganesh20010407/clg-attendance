@@ -13,8 +13,7 @@ content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet"
 href="student-dashboard.css">
 
-<script defer
-src="face-api/face-api.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 <script type="module"
 src="student-dashboard.js"></script>
@@ -64,6 +63,10 @@ Student
 
 
 <div class="header-right">
+
+<div class="header-clock" id="headerClock" aria-hidden="false">
+	<div id="currentTime">--:--:--</div>
+</div>
 
 <div class="notification">
 
@@ -137,6 +140,7 @@ class="page active">
 <h2 id="greetingText">
 Good Morning 👋
 </h2>
+<div id="sessionRange" class="session-range"></div>
 
 
 <div class="status-box">
@@ -153,6 +157,12 @@ class="status-message">
 
 Checking attendance...
 
+</div>
+
+
+<div class="home-session-box">
+	<div id="homeSessionName" class="home-session-name">--</div>
+	<div id="homeTimeLeft" class="home-time-left">--:--:-- left</div>
 </div>
 
 
@@ -282,27 +292,6 @@ class="page">
 Mark Attendance
 </h2>
 
-
-<div class="progress-container">
-
-<div id="gpsBlock"
-class="progress gray">
-GPS
-</div>
-
-<div id="faceBlock"
-class="progress gray">
-Facial
-</div>
-
-<div id="manualBlock"
-class="progress gray">
-Manual
-</div>
-
-</div>
-
-
 <p>
 Session:
 <span id="sessionText">
@@ -310,15 +299,53 @@ FN
 </span>
 </p>
 
+<div class="mark-session-box">
+	<div id="markSessionName" class="mark-session-name">--</div>
+	<div id="markTimeLeft" class="mark-time-left">--:--:-- left</div>
+</div>
 
-<button id="markBtn">
-Mark Attendance
+<div class="verification-steps">
+	<!-- Step 1: GPS Verification -->
+	<div id="gpsStep" class="step-box">
+		<div class="step-header">
+			<span class="step-number">1</span>
+			<span class="step-title">Location Verification</span>
+			<span id="gpsStatus" class="step-status">Pending</span>
+		</div>
+		<div id="gpsMessage" class="step-message">Verifying your location...</div>
+		<button id="gpsPermissionBtn" class="permission-btn" style="display:none;">📍 Grant Location Access</button>
+	</div>
+
+	<!-- Step 2: Facial Verification -->
+	<div id="faceStep" class="step-box disabled">
+		<div class="step-header">
+			<span class="step-number">2</span>
+			<span class="step-title">Facial Recognition</span>
+			<span id="faceStatus" class="step-status">Locked</span>
+		</div>
+		<div id="faceMessage" class="step-message">Complete location verification first</div>
+		<button id="facePermissionBtn" class="permission-btn" style="display:none;">📹 Grant Camera Access</button>
+		<div id="faceTrials" class="face-trials" style="display:none;">
+			<span>Attempts: <span id="faceTrialCount">3</span>/3</span>
+		</div>
+		<video id="video" style="display:none;" autoplay muted></video>
+	</div>
+
+	<!-- Step 3: Manual Approval -->
+	<div id="manualStep" class="step-box disabled">
+		<div class="step-header">
+			<span class="step-number">3</span>
+			<span class="step-title">Manual Verification</span>
+			<span id="manualStatus" class="step-status">Locked</span>
+		</div>
+		<div id="manualMessage" class="step-message">Manual approval required</div>
+		<button id="manualRequestBtn" class="request-btn" style="display:none;">📋 Request Manual Approval</button>
+	</div>
+</div>
+
+<button id="markBtn" class="mark-btn-main" style="display:none;">
+✓ Mark Attendance
 </button>
-
-
-<video id="video"
-autoplay muted>
-</video>
 
 </div>
 
@@ -453,3 +480,15 @@ Attendance Records
 </body>
 
 </html>
+
+<!-- Navigation confirmation modal -->
+<div id="navConfirmModal" class="modal hidden">
+	<div class="modal-content">
+		<h3 id="modalTitle">Confirm Navigation</h3>
+		<p id="modalMessage">You are navigating away — this will sign you out. Continue?</p>
+		<div class="modal-actions">
+			<button id="modalCancel" class="btn btn-secondary">Cancel</button>
+			<button id="modalConfirm" class="btn btn-primary">Yes, Sign Out</button>
+		</div>
+	</div>
+</div>
